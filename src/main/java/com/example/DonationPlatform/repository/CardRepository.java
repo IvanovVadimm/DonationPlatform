@@ -1,6 +1,8 @@
 package com.example.DonationPlatform.repository;
 
 import com.example.DonationPlatform.domain.Card;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.sql.*;
@@ -8,6 +10,11 @@ import java.util.ArrayList;
 
 @Repository
 public class CardRepository {
+
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    public CardRepository() throws SQLException {
+    }
 
     public ArrayList<String> getCardByUserId(int id) {
 
@@ -24,5 +31,52 @@ public class CardRepository {
             throw new RuntimeException(e);
         }
         return cardsOfUsers;
+    }
+
+    public boolean checkCardExistInDataBase(String numberOfCard) {
+
+        boolean result = false;
+        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/donation_platform", "postgres", "root")) {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM cards_table WHERE card_number = ?");
+            preparedStatement.setString(1,numberOfCard);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            result = resultSet.next();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+        if (result) {
+            log.info("Card is in database");
+        } else {
+            log.info("Card isn't in database");
+        }
+        return result;
+    }
+
+    public boolean createCard(int id, String numberOfCard, Date expireDate) {
+        int result = 0;
+        if (checkCardExistInDataBase(numberOfCard)) {
+            log.info("Card wasn't putted in database");
+            return false;
+        } else {
+            Card card = new Card();
+
+            try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/donation_platform", "postgres", "root")) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO card_table (id,card_number,expire_date_of_card)" +
+                        "VALUES (DEFAULT,?,?)");
+                preparedStatement.setInt(1, id);
+                preparedStatement.setString(1, numberOfCard);
+                preparedStatement.setDate(1, expireDate);
+                result = preparedStatement.executeUpdate();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            if ((result == 1)) {
+                log.info("Card was putted in database");
+            } else {
+                log.info("Card wasn't putted in database");
+            }
+            return result == 1;
+        }
+
     }
 }

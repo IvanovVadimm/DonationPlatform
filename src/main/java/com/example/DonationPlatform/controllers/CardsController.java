@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.ArrayList;
 
 @Controller
-@RequestMapping("/allCardsOfUser")
+@RequestMapping("/cards")
 public class CardsController {
 
     CardService cardService;
@@ -22,11 +22,21 @@ public class CardsController {
         this.cardService = cardService;
     }
 
-    @GetMapping("/{id}")
+
+    @GetMapping("/allCardsOfUser/{id}")
     public String getCardsOfUserByIdOfUser(@PathVariable int id, Model model) {
 
         ArrayList<String> arrayList = cardService.getCardsOfUserByIdOfUser(id);
         model.addAttribute("cards", arrayList);
         return "allCardsOfUser";
+    }
+
+    @GetMapping("/checkCardInDatabase/{numberOfCard}")
+    public String checkCard(@PathVariable String numberOfCard) {
+        if (cardService.checkCardInDataBase(numberOfCard)) {
+            return "successfully";
+        } else {
+            return "unsuccessfully";
+        }
     }
 }
