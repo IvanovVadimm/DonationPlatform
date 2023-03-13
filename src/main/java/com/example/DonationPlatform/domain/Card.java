@@ -7,7 +7,7 @@ import java.sql.Date;
 @Data
 public class Card {
     private int id;
-    private String cardNumber;
+    private String numberOfCard;
 
-    private Date expireDateOfCard;
+    private Date expireDate;
 }

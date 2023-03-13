@@ -19,4 +19,12 @@ public class UserService {
     public User getUserById(int id) {
         return userRepository.getUserById(id);
     }
+
+    public boolean createUser(User user) {
+        return userRepository.createUser(user);
+    }
+
+    public boolean updateUser(int id, String email, String login, String nickname, String password) {
+        return userRepository.updateUser(id, email, login, nickname, password);
+    }
 }

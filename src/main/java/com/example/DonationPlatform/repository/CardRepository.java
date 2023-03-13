@@ -52,7 +52,7 @@ public class CardRepository {
         return result;
     }
 
-    public boolean createCard(int id, String numberOfCard, Date expireDate) {
+    public boolean createCard(String numberOfCard, Date expireDate) {
         int result = 0;
         if (checkCardExistInDataBase(numberOfCard)) {
             log.info("Card wasn't putted in database");
@@ -61,9 +61,8 @@ public class CardRepository {
             Card card = new Card();
 
             try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/donation_platform", "postgres", "root")) {
-                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO card_table (id,card_number,expire_date_of_card)" +
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO card_table (id, card_number,expire_date_of_card)" +
                         "VALUES (DEFAULT,?,?)");
-                preparedStatement.setInt(1, id);
                 preparedStatement.setString(1, numberOfCard);
                 preparedStatement.setDate(1, expireDate);
                 result = preparedStatement.executeUpdate();

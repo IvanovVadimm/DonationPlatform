@@ -4,6 +4,7 @@ import com.example.DonationPlatform.repository.CardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
 import java.sql.Date;
 import java.util.ArrayList;
 
@@ -22,5 +23,9 @@ public class CardService {
 
     public boolean checkCardInDataBase(String numberOfCard){
         return cardRepository.checkCardExistInDataBase(numberOfCard);
+    }
+
+    public boolean creatCardInDatabase(String numberOfCard, Date expireDate){
+        return cardRepository.createCard(numberOfCard, expireDate);
     }
 }
