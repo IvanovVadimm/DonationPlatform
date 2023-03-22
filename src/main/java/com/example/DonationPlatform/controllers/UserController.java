@@ -11,13 +11,15 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    UserService userService;
+    private UserService userService;
 
     @Autowired
     public UserController(UserService userService) {
@@ -27,26 +29,50 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
-        return new ResponseEntity<>(user, HttpStatus.FOUND);
+        if (user != null) {
+            log.info("User was founded!");
+            return new ResponseEntity<>(user, HttpStatus.FOUND);
+        } else {
+            log.info("User was not founded!");
+            return new ResponseEntity<>(HttpStatus.FOUND);
+        }
+
     }
 
+
+
+    @GetMapping("/all")
+    public ResponseEntity<ArrayList<User>> getAllUser() {
+        ArrayList<User> userArrayList = userService.getAllUser();
+        if (userArrayList != null) {
+            log.info("Users were founded!");
+            return new ResponseEntity<>(userArrayList, HttpStatus.FOUND);
+        } else {
+            log.info("Users were not founded!");
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+    }
 
     @PutMapping
-    public void updateUser(int id, String email, String login, String nickname, String password) {
+    public ResponseEntity updateUser(@RequestBody User user) {
         boolean result;
-        result = userService.updateUser(id, email, login, nickname, password);
+        result = userService.updateUser(user);
+        if (result) {
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            log.warn("User was not updated!");
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
     }
 
-
-    @GetMapping
-    public String createUser(@ModelAttribute User user, BindingResult bindingResult) {
+    @PostMapping
+    public ResponseEntity createUser(@RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("We have bindingResult error : " + o);
             }
-            return "unsuccessfully";
         }
-        boolean result = userService.createUser(user);
-        return result ? "successfully" : "unsuccessfully";
+        return (user != null) ? new ResponseEntity(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
     }
 }

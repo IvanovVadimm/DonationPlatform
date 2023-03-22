@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Service
 public class UserService {
 
@@ -20,11 +22,14 @@ public class UserService {
         return userRepository.getUserById(id);
     }
 
-    public boolean createUser(User user) {
-        return userRepository.createUser(user);
+    public ArrayList<User> getAllUser(){
+        return userRepository.getAllUser();
     }
 
-    public boolean updateUser(int id, String email, String login, String nickname, String password) {
-        return userRepository.updateUser(id, email, login, nickname, password);
+    public boolean updateUser(User user){
+        return userRepository.updateUser(user);
+    }
+    public boolean createUser(User user) {
+        return userRepository.createUser(user);
     }
 }

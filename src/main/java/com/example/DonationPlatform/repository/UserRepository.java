@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
 import java.sql.*;
+import java.util.ArrayList;
 
 @Repository
 public class UserRepository {
@@ -22,7 +24,11 @@ public class UserRepository {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     public User getUserById(int id) {
-       return jdbcTemplate.queryForObject("SELECT * FROM user_table WHERE id = ? ",new UserMapper(),id);
+        return jdbcTemplate.queryForObject("SELECT * FROM user_table WHERE id = ? ", new UserMapper(), id);
+    }
+
+    public ArrayList<User> getAllUser() {
+        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM user_table", new UserMapper());
     }
 
 
@@ -46,21 +52,9 @@ public class UserRepository {
         return result == 1;
     }
 
-    public boolean updateUser(int id, String email, String login, String nickname, String password) {
+    public boolean updateUser(User user) {
         int result = 0;
-
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/donation_platform", "postgres", "root")) {
-
-            PreparedStatement statement = connection.prepareStatement("UPDATE user_table SET email = ?, login_of_user = ?, nickname= ?, password_of_user= ? WHERE id =?");
-            statement.setString(1, email);
-            statement.setString(2, login);
-            statement.setString(3, nickname);
-            statement.setString(4, password);
-            statement.setInt(5, id);
-            result = statement.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("something wrong...." + e.getMessage());
-        }
+        result = jdbcTemplate.update("UPDATE user_table SET email = ?, login_of_user = ?, nickname= ?, password_of_user= ? WHERE id =?", new UserMapper(), new Object[]{user.getEmail().toString(), user.getLogin().toString(), user.getNickName().toString(), user.getPassword().toString(), String.valueOf(user.getId())});
         return result == 1;
     }
 }

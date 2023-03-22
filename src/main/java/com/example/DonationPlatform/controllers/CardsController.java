@@ -21,7 +21,7 @@ import java.util.ArrayList;
 public class CardsController {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    CardService cardService;
+    private CardService cardService;
 
     @Autowired
     public CardsController(CardService cardService) {

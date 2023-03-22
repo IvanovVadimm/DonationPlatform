@@ -13,14 +13,14 @@ import java.sql.Date;
 @Data
 public class User {
     private int id;
-    @Email
+    //@Email
     private String email;
     private String login;
     private String password;
     private Date birthdate;
     private Date dateOfCreateAccount;
     private int totalAmountOfTransfers;
-    @Size(min = 5, max = 20)
+    //@Size(min = 5, max = 20)
     private String nickName;
     private String ratingOfUsers;
     private boolean deleteOfAccount;
