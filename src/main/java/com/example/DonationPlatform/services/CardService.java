@@ -1,5 +1,6 @@
 package com.example.DonationPlatform.services;
 
+import com.example.DonationPlatform.domain.Card;
 import com.example.DonationPlatform.repository.CardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,11 +22,14 @@ public class CardService {
         return cardRepository.getCardByUserId(id);
     }
 
+    public Card getCardById(int id){
+        return cardRepository.getCardById(id);
+    }
     public boolean checkCardInDataBase(String numberOfCard){
         return cardRepository.checkCardExistInDataBase(numberOfCard);
     }
 
-    public boolean creatCardInDatabase(String numberOfCard, Date expireDate){
+    public boolean creatCardInDatabase(String numberOfCard, String expireDate){
         return cardRepository.createCard(numberOfCard, expireDate);
     }
 }

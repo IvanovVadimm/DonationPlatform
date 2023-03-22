@@ -9,4 +9,8 @@ public class Transaction {
     private int id;
     private int amountOfTransfer;
     private Date dateOfTransaction;
+
+    private int senderId;
+
+    private int receiverId;
 }

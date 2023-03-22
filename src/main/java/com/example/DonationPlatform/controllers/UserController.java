@@ -5,17 +5,13 @@ import com.example.DonationPlatform.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-
-@Controller
+@RestController
 @RequestMapping("/user")
 public class UserController {
 
@@ -29,18 +25,16 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public String getUserById(@PathVariable int id, Model model) {
+    public ResponseEntity<User> getUserById(@PathVariable int id) {
         User user = userService.getUserById(id);
-        model.addAttribute("user", user);
-        return "singleUser"; // возвращает jsp
+        return new ResponseEntity<>(user, HttpStatus.FOUND);
     }
 
 
     @PutMapping
-    public String updateUser(int id, String email, String login, String nickname, String password) {
+    public void updateUser(int id, String email, String login, String nickname, String password) {
         boolean result;
         result = userService.updateUser(id, email, login, nickname, password);
-        return (result) ? "successfully" : "unsuccessfully";
     }
 
 
