@@ -32,4 +32,8 @@ public class UserService {
     public boolean createUser(User user) {
         return userRepository.createUser(user);
     }
+
+    public boolean deleteUser(User user){
+        return userRepository.deleteUser(user);
+    }
 }

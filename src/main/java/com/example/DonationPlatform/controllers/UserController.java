@@ -39,8 +39,6 @@ public class UserController {
 
     }
 
-
-
     @GetMapping("/all")
     public ResponseEntity<ArrayList<User>> getAllUser() {
         ArrayList<User> userArrayList = userService.getAllUser();
@@ -68,11 +66,22 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity createUser(@RequestBody User user, BindingResult bindingResult) {
+
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("We have bindingResult error : " + o);
             }
         }
-        return (user != null) ? new ResponseEntity(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
+        return (userService.createUser(user)) ? new ResponseEntity(user, HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping
+    public ResponseEntity deleteUser(@RequestBody User user, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (ObjectError o : bindingResult.getAllErrors()) {
+                log.warn("We have bindingResult error : " + o);
+            }
+        }
+        return (userService.deleteUser(user)) ? new ResponseEntity(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
     }
 }

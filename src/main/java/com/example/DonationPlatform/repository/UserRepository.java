@@ -1,60 +1,87 @@
 package com.example.DonationPlatform.repository;
 
 import com.example.DonationPlatform.domain.User;
-import com.example.DonationPlatform.utils.UserMapper;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.*;
+import javax.persistence.Query;
 import java.util.ArrayList;
 
 @Repository
 public class UserRepository {
 
-    JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    public UserRepository(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private final SessionFactory sessionFactory;
+
+
+    public UserRepository() {
+        this.sessionFactory = new Configuration().configure().buildSessionFactory();
+    }
+
     public User getUserById(int id) {
-        return jdbcTemplate.queryForObject("SELECT * FROM user_table WHERE id = ? ", new UserMapper(), id);
+        Session session = sessionFactory.openSession();
+        session.beginTransaction(); // начало транзакции
+
+        User user = session.get(User.class, id);
+
+        session.getTransaction().commit(); // конец траназакции
+        session.close();
+        if (user != null) {
+            return user;
+        }
+        return new User();
     }
 
     public ArrayList<User> getAllUser() {
-        return (ArrayList<User>) jdbcTemplate.query("SELECT * FROM user_table", new UserMapper());
+        Session session = sessionFactory.openSession();
+        session.beginTransaction();
+        Query query = session.createQuery("from User");
+        ArrayList<User> users = (ArrayList<User>) query.getResultList();
+        session.getTransaction().commit();
+        session.close();
+        return users;
     }
 
+    public boolean deleteUser(User user) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
 
-    public boolean createUser(User user) {
-        int result = 0;
-        try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/donation_platform", "postgres", "root")) {
-
-            PreparedStatement statement = connection.prepareStatement("INSERT INTO user_table (id, email, login_of_user, password_of_user, birthdate, date_of_create_account, deleted_account, total_amount_of_transfers,nickname, rating_of_user) " +
-                    "VALUES (DEFAULT, ?, ?, ?, ?, ?, DEFAULT, DEFAULT, ?, DEFAULT)");
-            statement.setString(1, user.getEmail());
-            statement.setString(2, user.getLogin());
-            statement.setString(3, user.getPassword());
-            statement.setDate(4, user.getBirthdate()); //передаём в формате YYYY-MM-DD
-            statement.setDate(5, new Date((new java.util.Date()).getTime()));
-            statement.setString(6, user.getNickName());
-
-            result = statement.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("something wrong...." + e.getMessage());
+            user.setDeleteOfAccount(true);
+            session.getTransaction().commit();
+            session.close();
+            return true;
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            return false;
         }
-        return result == 1;
     }
 
     public boolean updateUser(User user) {
-        int result = 0;
-        result = jdbcTemplate.update("UPDATE user_table SET email = ?, login_of_user = ?, nickname= ?, password_of_user= ? WHERE id =?", new UserMapper(), new Object[]{user.getEmail().toString(), user.getLogin().toString(), user.getNickName().toString(), user.getPassword().toString(), String.valueOf(user.getId())});
-        return result == 1;
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.saveOrUpdate(user);
+            session.getTransaction().commit();
+            return true;
+        }catch (Exception e){
+            log.warn(e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean createUser(User user) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+            session.save(user);
+            session.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            log.warn(e.getMessage());
+            return false;
+        }
     }
 }

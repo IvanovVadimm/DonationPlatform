@@ -11,14 +11,14 @@ import java.util.ArrayList;
 
 @Service
 public class CardService {
-    CardRepository cardRepository;
+    private CardRepository cardRepository;
 
     @Autowired
     public CardService(CardRepository cardRepository) {
         this.cardRepository = cardRepository;
     }
 
-    public ArrayList<String> getCardsOfUserByIdOfUser(int id){
+    public ArrayList<Card> getCardsOfUserByIdOfUser(int id){
         return cardRepository.getCardByUserId(id);
     }
 

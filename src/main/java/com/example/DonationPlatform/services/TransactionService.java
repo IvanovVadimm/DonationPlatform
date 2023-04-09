@@ -19,4 +19,8 @@ public class TransactionService {
     public boolean createTransaction(Transaction transaction) {
         return transactionRepository.createTransaction(transaction);
     }
+
+    public Transaction getTransactionById(int id){
+        return transactionRepository.getTransactionById(id);
+    }
 }

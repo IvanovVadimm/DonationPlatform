@@ -30,8 +30,8 @@ public class CardsController {
 
 
     @GetMapping("/aoubi/{id}") // получение всех карточек пользователя по id
-    public ResponseEntity<ArrayList<String>> getCardsOfUserByIdOfUser(@PathVariable int id) {
-        ArrayList<String> arrayList = cardService.getCardsOfUserByIdOfUser(id);
+    public ResponseEntity<ArrayList<Card>> getCardsOfUserByIdOfUser(@PathVariable int id) {
+        ArrayList<Card> arrayList = cardService.getCardsOfUserByIdOfUser(id);
         return new ResponseEntity<>(arrayList, HttpStatus.OK);
     }
 
