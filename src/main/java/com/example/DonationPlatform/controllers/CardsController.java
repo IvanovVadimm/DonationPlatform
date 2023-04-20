@@ -1,3 +1,4 @@
+
 package com.example.DonationPlatform.controllers;
 
 import com.example.DonationPlatform.domain.Card;
@@ -7,13 +8,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Date;
 import java.util.ArrayList;
 
 @RestController
@@ -42,7 +40,6 @@ public class CardsController {
         return new ResponseEntity<>(card, HttpStatus.OK);
     }
 
-
     @GetMapping("/ссidb/{numberOfCard}") // проверка существует ли данная карта в базе данных
     public ResponseEntity checkCard(@PathVariable String numberOfCard) {
         if (cardService.checkCardInDataBase(numberOfCard)) {
@@ -59,7 +56,7 @@ public class CardsController {
                 log.warn("BindingResult has Error: " + o);
             }
         }
-        if (cardService.creatCardInDatabase(String.valueOf(card.getNumberOfCard()), String.valueOf(card.getExpireDate()))) {
+        if (cardService.creatCardInDatabase(card)) {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.OK); // неправильные данные карты

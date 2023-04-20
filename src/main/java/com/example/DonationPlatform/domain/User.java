@@ -7,10 +7,6 @@ import lombok.ToString;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.Negative;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
 import java.sql.Date;
 
 @Component
@@ -45,6 +41,10 @@ public class User {
     private String ratingOfUsers;
     @Column(name = "deleted_account")
     private boolean deleteOfAccount;
+
+    @Column(name = "role")
+    private String role;
+
     @JsonBackReference
     @OneToOne(mappedBy = "userSenderId")
     private Transaction senderTransaction;

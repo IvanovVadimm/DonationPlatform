@@ -1,35 +1,40 @@
 package com.example.DonationPlatform.services;
 
 import com.example.DonationPlatform.domain.Card;
-import com.example.DonationPlatform.repository.CardRepository;
+import com.example.DonationPlatform.repository.ICardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.xml.crypto.Data;
-import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Service
 public class CardService {
-    private CardRepository cardRepository;
+    private ICardRepository cardRepository;
 
     @Autowired
-    public CardService(CardRepository cardRepository) {
+    public CardService(ICardRepository cardRepository) {
         this.cardRepository = cardRepository;
     }
 
-    public ArrayList<Card> getCardsOfUserByIdOfUser(int id){
-        return cardRepository.getCardByUserId(id);
+    public ArrayList<Card> getCardsOfUserByIdOfUser(int id) {
+        return cardRepository.findAllCardByUserId(id);
     }
 
-    public Card getCardById(int id){
-        return cardRepository.getCardById(id);
-    }
-    public boolean checkCardInDataBase(String numberOfCard){
-        return cardRepository.checkCardExistInDataBase(numberOfCard);
+    public Card getCardById(int id) {
+        return cardRepository.findById(id).get();
     }
 
-    public boolean creatCardInDatabase(String numberOfCard, String expireDate){
-        return cardRepository.createCard(numberOfCard, expireDate);
+    public boolean checkCardInDataBase(String numberOfCard) {
+        return cardRepository.findByNumberOfCard(numberOfCard);
+    }
+
+    public boolean creatCardInDatabase(Card card) {
+        if (!cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
+            Optional<Card> cardOptional = Optional.ofNullable(cardRepository.save(card));
+            return cardOptional.isPresent();
+        } else {
+            return false;
+        }
     }
 }

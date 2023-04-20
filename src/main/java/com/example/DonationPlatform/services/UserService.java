@@ -1,9 +1,8 @@
 package com.example.DonationPlatform.services;
 
 import com.example.DonationPlatform.domain.User;
-import com.example.DonationPlatform.repository.UserRepository;
+import com.example.DonationPlatform.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,29 +10,30 @@ import java.util.ArrayList;
 @Service
 public class UserService {
 
-    UserRepository userRepository;
+    IUserRepository userRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(IUserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     public User getUserById(int id) {
-        return userRepository.getUserById(id);
+        return userRepository.findById(id).orElse(new User());
     }
 
     public ArrayList<User> getAllUser(){
-        return userRepository.getAllUser();
+        return (ArrayList<User>) userRepository.findAll();
     }
 
-    public boolean updateUser(User user){
-        return userRepository.updateUser(user);
+    public User updateUser(User user){
+        return userRepository.saveAndFlush(user);
     }
-    public boolean createUser(User user) {
-        return userRepository.createUser(user);
+    public User createUser(User user) {
+        return userRepository.save(user);
     }
 
-    public boolean deleteUser(User user){
-        return userRepository.deleteUser(user);
+    public boolean deleteUser(int id){
+        userRepository.deleteById(id);
+        return true;
     }
 }

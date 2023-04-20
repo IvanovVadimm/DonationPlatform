@@ -12,6 +12,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
@@ -55,8 +56,8 @@ public class UserController {
     @PutMapping
     public ResponseEntity updateUser(@RequestBody User user) {
         boolean result;
-        result = userService.updateUser(user);
-        if (result) {
+        Optional<User> optionalUser = Optional.of(userService.updateUser(user));
+        if (optionalUser.isPresent()) {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
             log.warn("User was not updated!");
@@ -66,22 +67,18 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity createUser(@RequestBody User user, BindingResult bindingResult) {
-
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("We have bindingResult error : " + o);
             }
         }
-        return (userService.createUser(user)) ? new ResponseEntity(user, HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
+        Optional<User> optionalUser = Optional.ofNullable(userService.createUser(user));
+        return (optionalUser.isPresent()) ? new ResponseEntity(user, HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @DeleteMapping
-    public ResponseEntity deleteUser(@RequestBody User user, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            for (ObjectError o : bindingResult.getAllErrors()) {
-                log.warn("We have bindingResult error : " + o);
-            }
-        }
-        return (userService.deleteUser(user)) ? new ResponseEntity(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteUser(@PathVariable int id) {
+
+        return (userService.deleteUser(id)) ? new ResponseEntity(HttpStatus.CREATED) : new ResponseEntity<>(HttpStatus.OK);
     }
 }

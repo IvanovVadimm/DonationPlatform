@@ -1,6 +1,5 @@
 package com.example.DonationPlatform.domain;
 
-import com.example.DonationPlatform.controllers.UserController;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
