@@ -13,6 +13,7 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/cards")
@@ -34,10 +35,14 @@ public class CardsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getCardById(@PathVariable int id){
+    public ResponseEntity getCardById(@PathVariable int id) {
 
-        Card card = cardService.getCardById(id);
-        return new ResponseEntity<>(card, HttpStatus.OK);
+        Optional<Card> cardOptional = cardService.getCardById(id);
+        if (cardOptional.isPresent()) {
+            return new ResponseEntity<>(cardOptional.get(), HttpStatus.OK);
+        } else {
+            return new ResponseEntity(HttpStatus.CONFLICT);
+        }
     }
 
     @GetMapping("/ссidb/{numberOfCard}") // проверка существует ли данная карта в базе данных
@@ -51,8 +56,8 @@ public class CardsController {
 
     @PostMapping // добавление новой карты
     public ResponseEntity createCard(@RequestBody Card card, BindingResult bindingResult) {
-        if(bindingResult.hasErrors()){
-            for (ObjectError o:bindingResult.getAllErrors()) {
+        if (bindingResult.hasErrors()) {
+            for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("BindingResult has Error: " + o);
             }
         }
@@ -60,6 +65,15 @@ public class CardsController {
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
             return new ResponseEntity<>(HttpStatus.OK); // неправильные данные карты
+        }
+    }
+
+    @DeleteMapping
+    public ResponseEntity deleteCard(@RequestBody Card card) {
+        if (cardService.deleteCardOfUserByCardNumber(card)) {
+            return new ResponseEntity(HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
 }

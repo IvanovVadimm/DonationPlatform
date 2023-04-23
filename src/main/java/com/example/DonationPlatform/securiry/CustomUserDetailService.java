@@ -1,3 +1,4 @@
+/*
 package com.example.DonationPlatform.securiry;
 
 import com.example.DonationPlatform.domain.User;
@@ -33,3 +34,4 @@ public class CustomUserDetailService implements UserDetailsService {
         return securityUser;
     }
 }
+*/

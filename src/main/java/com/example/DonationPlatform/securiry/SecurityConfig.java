@@ -1,3 +1,4 @@
+/*
 package com.example.DonationPlatform.securiry;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,3 +45,4 @@ public class SecurityConfig {
     }
 
 }
+*/

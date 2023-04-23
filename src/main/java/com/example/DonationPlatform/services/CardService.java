@@ -21,8 +21,23 @@ public class CardService {
         return cardRepository.findAllCardByUserId(id);
     }
 
-    public Card getCardById(int id) {
-        return cardRepository.findById(id).get();
+    public boolean deleteCardOfUserByCardNumber(Card card) {
+        if (cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
+            cardRepository.deleteCardByNumberOfCard(card.getNumberOfCard());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Optional<Card> getCardById(int id) {
+        Optional<Card> cardOptional = cardRepository.findById(id);
+        if (cardOptional.isPresent()) {
+            if (!cardRepository.isDeletedCardInDataBaseByIdCardsChecked(id)) {
+                return cardOptional;
+            }
+        }
+        return cardOptional;
     }
 
     public boolean checkCardInDataBase(String numberOfCard) {
