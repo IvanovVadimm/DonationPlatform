@@ -1,7 +1,6 @@
 package com.example.DonationPlatform.repository;
 
 import com.example.DonationPlatform.domain.Transaction;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -32,7 +31,7 @@ public class TransactionRepository {
         }
     }
 
-    public boolean createTransaction(Transaction transaction) {
+    /*public boolean createTransaction(Transaction transaction) {
 
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -43,7 +42,7 @@ public class TransactionRepository {
             log.warn(e.getMessage());
             return false;
         }
-    }
+    }*/
 }
 
 /*

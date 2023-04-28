@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/trans")
 public class TransactionController {
@@ -20,22 +22,22 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Transaction> getTransactionById(@PathVariable int id){
-        Transaction transaction = transactionService.getTransactionById(id);
-        if(transaction != null){
-            return new ResponseEntity<>(transaction,HttpStatus.OK);
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable int id) {
+        Optional<Transaction> optionalTransaction = Optional.ofNullable(transactionService.getTransactionById(id));
+        if (optionalTransaction.isPresent()) {
+            return new ResponseEntity<>(optionalTransaction.get(), HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
     }
+
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
-    transactionService.createTransaction(transaction);
-        if (transaction != null) {
-            return new ResponseEntity<>(transaction, HttpStatus.CREATED);
+    public ResponseEntity createTransaction(@RequestBody Transaction transaction) {
+        if (transactionService.createTransaction(transaction)) {
+            return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            return new ResponseEntity<>(HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
 

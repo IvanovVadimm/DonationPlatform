@@ -27,7 +27,6 @@ public class CardsController {
         this.cardService = cardService;
     }
 
-
     @GetMapping("/aoubi/{id}") // получение всех карточек пользователя по id
     public ResponseEntity<ArrayList<Card>> getCardsOfUserByIdOfUser(@PathVariable int id) {
         ArrayList<Card> arrayList = cardService.getCardsOfUserByIdOfUser(id);

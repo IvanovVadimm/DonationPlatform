@@ -34,7 +34,7 @@ public class CardService {
         Optional<Card> cardOptional = cardRepository.findById(id);
         if (cardOptional.isPresent()) {
             if (!cardRepository.isDeletedCardInDataBaseByIdCardsChecked(id)) {
-                return cardOptional;
+                return cardOptional; //TODO: возвращает херню
             }
         }
         return cardOptional;
