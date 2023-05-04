@@ -34,11 +34,19 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        if (userRepository.findUserByLoginOrEmailOrNickName(user.getLogin(), user.getEmail(), user.getNickName())) {
+        if (userRepository.existsUserByLoginOrEmailOrNickName(user.getLogin(), user.getEmail(), user.getNickName())) {
             return new User();
         }
         user.setDateOfCreateAccount(new Date(new java.util.Date().getTime()));
         return userRepository.save(user);
+    }
+
+    public boolean userIsDeleted(int id) {
+        if (userRepository.isDeletedUserInDataBaseByIdUserChecked(id)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public boolean userRegistration(RegistrationOfUsers registrationOfUsers) {
@@ -61,7 +69,10 @@ public class UserService {
     }
 
     public boolean deleteUser(int id) {
-        userRepository.deleteById(id);
-        return true;
+        if (!userIsDeleted(id)) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

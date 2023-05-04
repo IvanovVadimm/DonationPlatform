@@ -10,9 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -78,7 +84,7 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity createUser(@Valid @RequestBody User user, BindingResult bindingResult) {
+    public ResponseEntity createUser(@RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 ////log through aspects in future
@@ -87,7 +93,7 @@ public class UserController {
             }
         }
         Optional<User> optionalUser = Optional.ofNullable(userService.createUser(user));
-        if (optionalUser.isPresent()) {
+        if (optionalUser.isPresent() && optionalUser.get().getId() != 0) {
             //log through aspects in future
             return new ResponseEntity(HttpStatus.CREATED);
         } else {
