@@ -16,9 +16,10 @@
         <property name="show_sql">true</property>
         <property name="format_sql">true</property>
 
-        <mapping class="com.example.DonationPlatform.domain.User"/>
-        <mapping class="com.example.DonationPlatform.domain.Card"/>
-        <mapping class="com.example.DonationPlatform.domain.Transaction"/>
+        <mapping class="com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo"/>
+        <mapping class="com.example.DonationPlatform.domain.CardForUsersView"/>
+        <mapping class="com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithLightInformation"/>
+        <mapping class="com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithAllInfo"/>
 
     </session-factory>
 </hibernate-configuration>

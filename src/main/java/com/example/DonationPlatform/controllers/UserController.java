@@ -1,7 +1,15 @@
 package com.example.DonationPlatform.controllers;
 
-import com.example.DonationPlatform.domain.User;
+
+import com.example.DonationPlatform.domain.CardForUsersView;
+import com.example.DonationPlatform.domain.DAOCard.DAOCard;
+import com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithAllInfo;
+import com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo;
+import com.example.DonationPlatform.domain.TransactionAboutUserById;
 import com.example.DonationPlatform.domain.request.RegistrationOfUsers;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardExpiredException;
+import com.example.DonationPlatform.services.CardService;
+import com.example.DonationPlatform.services.TransactionService;
 import com.example.DonationPlatform.services.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,11 +37,17 @@ public class UserController {
 
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    private CardService cardService;
+
     private UserService userService;
 
+    private TransactionService transactionService;
+
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(CardService cardService, UserService userService, TransactionService transactionService) {
+        this.cardService = cardService;
         this.userService = userService;
+        this.transactionService = transactionService;
     }
 
     @PostMapping("/registration")
@@ -45,54 +60,43 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable int id) {
-        User user = userService.getUserById(id);
-        Optional<User> userOptional = Optional.ofNullable(user);
-        // TODO: сделать проверку на то что какое-то из полей пользователя совпадает с тем что уже в базе
+    public ResponseEntity<DAOUserWithAllInfo> getUserById(@PathVariable int id) {
+        Optional<DAOUserWithAllInfo> userOptional = userService.getUserById(id);
         if (userOptional.isPresent()) {
-            //log through aspects in future
             return new ResponseEntity<>(userOptional.get(), HttpStatus.FOUND);
         } else {
-            //log through aspects in future
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ArrayList<User>> getAllUser() {
-        Optional<ArrayList<User>> optionalArrayListOfUsers = Optional.ofNullable(userService.getAllUser());
-        if (optionalArrayListOfUsers.isPresent()) {
-            //log through aspects in future
-            return new ResponseEntity<>(optionalArrayListOfUsers.get(), HttpStatus.FOUND);
+    public ResponseEntity<List<DAOUserWithAllInfo>> getAllUser() {
+        Optional<List<DAOUserWithAllInfo>> optionalListOfUsers = userService.getAllUser();
+        if (optionalListOfUsers.isPresent()) {
+            return new ResponseEntity<>(optionalListOfUsers.get(), HttpStatus.FOUND);
         } else {
-            //log through aspects in future
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     @PutMapping
-    public ResponseEntity updateUser(@RequestBody User user) {
-        Optional<User> optionalUser = Optional.of(userService.updateUser(user));
+    public ResponseEntity updateUser(@RequestBody DAOUserWithAllInfo user) {
+        Optional<DAOUserWithAllInfo> optionalUser = Optional.of(userService.updateUser(user));
         if (optionalUser.isPresent()) {
-            //log through aspects in future
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            //log through aspects in future
             return new ResponseEntity<>(HttpStatus.OK);
         }
     }
 
     @PostMapping
-    public ResponseEntity createUser(@RequestBody User user, BindingResult bindingResult) {
+    public ResponseEntity createUser(@RequestBody DAOUserWithAllInfo user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
-                ////log through aspects in future
-                //log.warn("We have bindingResult error : " + o);
                 return new ResponseEntity(HttpStatus.BAD_REQUEST);
             }
         }
-        Optional<User> optionalUser = Optional.ofNullable(userService.createUser(user));
+        Optional<DAOUserWithAllInfo> optionalUser = Optional.ofNullable(userService.createUser(user));
         if (optionalUser.isPresent() && optionalUser.get().getId() != 0) {
             //log through aspects in future
             return new ResponseEntity(HttpStatus.CREATED);
@@ -112,5 +116,49 @@ public class UserController {
             //log through aspects in future
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
+    }
+
+    @GetMapping("/aoubi/{id}") // получение всех карточек пользователя по id
+    public ResponseEntity<ArrayList<DAOCard>> getCardsOfUserByIdOfUser(@PathVariable int id) {
+        ArrayList<DAOCard> arrayList = cardService.getCardsOfUserByIdOfUser(id);
+        return new ResponseEntity<>(arrayList, HttpStatus.OK);
+    }
+
+    @GetMapping("/alltr/{id}")
+    public ResponseEntity<ArrayList<TransactionAboutUserById>> getAllInfoAboutTransactionByUserIdForUser(@PathVariable int id) {
+        Optional<ArrayList<TransactionAboutUserById>> optionalTransactionsAboutUser = transactionService.getAllOfTransactionAboutUserByUserIdForUser(id);
+        if (optionalTransactionsAboutUser.isPresent()) {
+            return new ResponseEntity<>(optionalTransactionsAboutUser.get(), HttpStatus.FOUND);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/alltrforadmin/{id}")
+    public ResponseEntity<ArrayList<DAOTransactionWithAllInfo>> getAllInfoAboutTransactionByUserIdForAdmin(@PathVariable int id) {
+        Optional<ArrayList<DAOTransactionWithAllInfo>> optionalTransactionAboutUsers = transactionService.getAllOfTransactionAboutUserByIdForAdmin(id);
+        if (optionalTransactionAboutUsers.isPresent()) {
+            return new ResponseEntity<>(optionalTransactionAboutUsers.get(), HttpStatus.FOUND);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/tuya/{userId}/{sum}")
+    public ResponseEntity putMoneyOnAccountByCard(@RequestBody CardForUsersView card, @PathVariable int userId, @PathVariable int sum) throws CardExpiredException {
+        //try {
+        if (cardService.checkCardInDataBase(card.getNumberOfCard())) {
+            if (!cardService.cardIsExpired(card)) {
+                if (userService.putMoneyOnCurrentAmount(sum, userId, card)) {
+                    return new ResponseEntity<>(HttpStatus.CREATED);
+                }
+            }
+        /*} catch (CardExpiredException e) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+        return null;*/
+
+        }
+        return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
 }

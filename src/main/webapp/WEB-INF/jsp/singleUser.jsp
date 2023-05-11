@@ -1,6 +1,6 @@
-<%@ page import="com.example.DonationPlatform.domain.User" %>
+<%@ page import="com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% User userJsp = (User) request.getAttribute("user");%>
+<% DAOUserWithAllInfo userJsp = (DAOUserWithAllInfo) request.getAttribute("user");%>
 <html>
 <head>
     <title>User info</title>

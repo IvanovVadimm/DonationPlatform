@@ -1,6 +1,6 @@
 package com.example.DonationPlatform.repository;
 
-import com.example.DonationPlatform.domain.Transaction;
+import com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithLightInformation.DAOTransactionWithInfoOnlyForUser;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

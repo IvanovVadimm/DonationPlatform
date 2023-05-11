@@ -1,6 +1,6 @@
 package com.example.DonationPlatform.repository;
 
-import com.example.DonationPlatform.domain.User;
+import com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;

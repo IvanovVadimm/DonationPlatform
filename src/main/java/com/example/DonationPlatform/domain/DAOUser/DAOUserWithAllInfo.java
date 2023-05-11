@@ -1,6 +1,6 @@
-package com.example.DonationPlatform.domain;
+package com.example.DonationPlatform.domain.DAOUser;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithAllInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,20 +13,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
 import java.sql.Date;
+import java.util.Set;
 
 @Component
 @Data
 @Entity
-@ToString(exclude = {"receiver","sender","transactionReceiver","transactionSender"})
-@EqualsAndHashCode(exclude = {"receiver","sender","transactionReceiver","transactionSender"})
+@ToString(exclude = {"senderItems","receiverItems"})
+@EqualsAndHashCode(exclude = {"senderItems","receiverItems"})
 @Table(name = "user_table")
-public class User {
+public class DAOUserWithAllInfo {
     @Id // обозначает первичный ключ
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq_gen")
@@ -39,79 +39,48 @@ public class User {
 
     @Column(name = "login_of_user")
     private String login;
+
     @Column(name = "password_of_user")
     private String password;
+
     @Column(name = "birthdate")
     private Date birthdate;
+
     @Column(name = "date_of_create_account")
     private Date dateOfCreateAccount;
+
     @Column(name = "total_amount_of_transfers")
     private int totalAmountOfTransfers;
+
     @Column(name = "current_amount_on_account")
     private int currentAmountOnAccount;
+
     @Size(min = 3, max = 200)
     @Column(name = "nickname")
     private String nickName;
+
     @Column(name = "rating_of_user")
     private String ratingOfUsers;
+
     @Column(name = "deleted_account")
     private boolean deleteOfAccount;
+
     @Column(name = "role_of_user")
     private String role;
 
+    @JsonIgnore
+    @OneToMany(mappedBy="sender")
+    private Set<DAOTransactionWithAllInfo> senderItems;
+
+    @JsonIgnore
+    @OneToMany(mappedBy="receiver")
+    private Set<DAOTransactionWithAllInfo> receiverItems;
+
     /*@JsonIgnore
-    @JsonBackReference
-    @ManyToMany(mappedBy = "userSender", fetch = FetchType.LAZY)
-    private List<Transaction> senderTransaction;*/
-   /* @JsonIgnore
-    @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "receiver_id")
-    private Transaction receiverTransaction;
+    @OneToMany(mappedBy="senderNickname")
+    private Set<DAOTransactionWithInfoOnlyForUser> senderItemsForUserInfo;
 
     @JsonIgnore
-    @JsonBackReference
-    @ManyToOne
-    @JoinColumn(name = "sender_id")
-    private Transaction senderTransaction;
-*/
-
-    //TODO: ManyToMany
-    /*@JsonIgnore
-    @JsonBackReference
-    @ManyToMany(mappedBy = "receiverTransactions")
-    List<Transaction> receiver;
-
-    @JsonIgnore
-    @JsonBackReference
-    @ManyToMany(mappedBy = "senderTransactions")
-    List<Transaction> sender;
-*/
-
-    @JsonBackReference
-    @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name="receiver_id", nullable=false)
-    private Transaction transactionReceiver;
-
-    @JsonBackReference
-    @JsonIgnore
-    @ManyToOne
-    @JoinColumn(name="sender_id", nullable=false)
-    private Transaction transactionSender;
-
-
-  /*@JsonIgnore
-    @JsonBackReference
-    @OneToMany(mappedBy = "userSender")
-    public Transaction getSenderTransaction() {
-        return this.senderTransaction;
-    }
-
-    @JsonIgnore
-    @JsonBackReference
-    @OneToMany(mappedBy = "userReceiver")
-    public Transaction getReceiverTransaction() {
-        return this.receiverTransaction;
-    }*/
+    @OneToMany(mappedBy="receiverNickname")
+    private Set<DAOTransactionWithInfoOnlyForUser> receiverItemsForUserInfo;*/
 }

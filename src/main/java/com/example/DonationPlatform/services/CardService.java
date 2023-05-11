@@ -1,27 +1,31 @@
 package com.example.DonationPlatform.services;
 
-import com.example.DonationPlatform.domain.Card;
-import com.example.DonationPlatform.repository.ICardRepository;
+import com.example.DonationPlatform.domain.CardForUsersView;
+import com.example.DonationPlatform.domain.DAOCard.DAOCard;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardExpiredException;
+import com.example.DonationPlatform.repository.IDAOCardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
 public class CardService {
-    private ICardRepository cardRepository;
+    private IDAOCardRepository cardRepository;
 
     @Autowired
-    public CardService(ICardRepository cardRepository) {
+    public CardService(IDAOCardRepository cardRepository) {
         this.cardRepository = cardRepository;
     }
 
-    public ArrayList<Card> getCardsOfUserByIdOfUser(int id) {
+    public ArrayList<DAOCard> getCardsOfUserByIdOfUser(int id) {
         return cardRepository.findAllCardByUserId(id);
     }
 
-    public boolean deleteCardOfUserByCardNumber(Card card) {
+    public boolean deleteCardOfUserByCardNumber(CardForUsersView card) {
         if (cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
             cardRepository.deleteCardByNumberOfCard(card.getNumberOfCard());
             return true;
@@ -30,8 +34,8 @@ public class CardService {
         }
     }
 
-    public Optional<Card> getCardById(int id) {
-        Optional<Card> cardOptional = cardRepository.findById(id);
+    public Optional<DAOCard> getCardById(int id) {
+        Optional<DAOCard> cardOptional = cardRepository.findById(id);
         if (cardOptional.isPresent()) {
             if (!cardRepository.isDeletedCardInDataBaseByIdCardsChecked(id)) {
                 return cardOptional; //TODO: возвращает херню
@@ -41,15 +45,28 @@ public class CardService {
     }
 
     public boolean checkCardInDataBase(String numberOfCard) {
-        return cardRepository.findByNumberOfCard(numberOfCard);
+        return cardRepository.existsCardByNumberOfCard(numberOfCard);
     }
 
-    public boolean creatCardInDatabase(Card card) {
+    public boolean creatCardInDatabase(DAOCard card) {
         if (!cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
-            Optional<Card> cardOptional = Optional.ofNullable(cardRepository.save(card));
+            Optional<DAOCard> cardOptional = Optional.ofNullable(cardRepository.save(card));
             return cardOptional.isPresent();
-        } else {
-            return false;
         }
+            return false;
+    }
+
+    public boolean cardIsExpired(CardForUsersView card) throws CardExpiredException {
+        Date expireDateOfCard = card.getExpireDate();
+        String cardNumber = card.getNumberOfCard();
+        LocalDate localDate = LocalDate.now();
+        Date currentDate = Date.valueOf(localDate);
+
+        if(currentDate.after(expireDateOfCard)){
+            //cardRepository.deleteCardByNumberOfCard(cardNumber);
+           // throw new CardExpiredException();
+            return true;
+        }
+        return false;
     }
 }
