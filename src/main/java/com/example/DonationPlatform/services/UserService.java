@@ -149,12 +149,11 @@ public class UserService {
 
         updatedUserByUser.setId(user.getId());
 
-
         if (idSecurityUser == user.getId()) {
             if (!userRepository.existsUserByEmail(user.getEmail())) {
                 updatedUserByUser.setEmail(user.getEmail());
             } else if (user.getEmail().equals(userFromDataBase.getEmail())) {
-                updatedUserByUser.setEmail(user.getEmail());
+                updatedUserByUser.setEmail(userFromDataBase.getEmail());
             } else {
                 throw new UserIsAlreadyExistInDataBaseWithEmailException(user.getEmail());
             }
@@ -183,7 +182,7 @@ public class UserService {
             updatedUserByUser.setRatingOfUsers(userFromDataBase.getRatingOfUsers());
 
             if (!(user.getPassword() == null)) {
-                updatedUserByUser.setPassword(user.getPassword());
+                updatedUserByUser.setPassword(passwordEncoder.encode(user.getPassword()));
             } else {
                 updatedUserByUser.setPassword(userFromDataBase.getPassword());
             }
@@ -191,7 +190,7 @@ public class UserService {
             if (!(user.getBirthdate() == null)) {
                 updatedUserByUser.setBirthdate(user.getBirthdate());
             } else {
-                updatedUserByUser.setPassword(userFromDataBase.getPassword());
+                updatedUserByUser.setBirthdate(userFromDataBase.getBirthdate());
             }
 
             userRepository.save(updatedUserByUser);
@@ -288,6 +287,7 @@ public class UserService {
         throw new NoRightToPerformActionsException();
     }
 
+    @Transactional
     public boolean putMoneyOnCurrentAmount(int sum, CardForUserView card) throws AttemptToReplenishTheAccountWithANonExistedCardException, CardWasDeletedException, NotFoundUserInDataBaseByLoginException, CardNotFoundExceptionByCardNumberException, CardExpiredException {
 
         String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();

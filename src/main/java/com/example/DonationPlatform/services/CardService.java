@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -40,6 +41,7 @@ public class CardService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public boolean deleteCardOfUserByCardNumber(CardForUserView card) throws CardNotFoundExceptionByCardNumberException, NotEnteredCardNumberException, NoRightToPerformActionsException {
 
         String userLogin = SecurityContextHolder.getContext().getAuthentication().getName();
