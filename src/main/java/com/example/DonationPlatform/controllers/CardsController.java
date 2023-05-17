@@ -45,6 +45,11 @@ public class CardsController {
     }
 
     @Operation(summary = "This method return card by entering id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "404", description = "This card is not exist"),
+            @ApiResponse(responseCode = "302", description = "This card was found"),
+            @ApiResponse(responseCode = "403", description = "No rights to get a card by id"),
+    })
     @GetMapping("/{id}")
     public ResponseEntity getCardById(@Parameter (description = "Expected card id") @PathVariable int id) throws CardNotFoundByCardIdException, NoRightToPerformActionsException, NotFoundUserInDataBaseByIdException {
         Optional<DaoCard> cardOptional = cardService.getCardById(id);
@@ -80,6 +85,14 @@ public class CardsController {
         }
     }
 
+    @Operation(summary = "This method allows to delete card")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Card was deleted"),
+            @ApiResponse(responseCode = "409", description = "Card wasn't deleted"),
+            @ApiResponse(responseCode = "204", description = "Cards number was not entered"),
+            @ApiResponse(responseCode = "403", description = "User have not right to delete card"),
+            @ApiResponse(responseCode = "404", description = "Not found card in Data base"),
+    })
     @DeleteMapping
     public ResponseEntity deleteCard(@RequestBody CardForUserView card) throws CardNotFoundExceptionByCardNumberException, NotEnteredCardNumberException, NoRightToPerformActionsException {
         if (cardService.deleteCardOfUserByCardNumber(card)) {

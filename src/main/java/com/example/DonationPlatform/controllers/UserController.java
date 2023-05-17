@@ -84,6 +84,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
+
     @Operation(summary = "This method will find user by id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "User was found"),
@@ -185,6 +186,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
     }
+
     @Operation(summary = "This method allows to delete user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User was deleted"),
@@ -262,6 +264,7 @@ public class UserController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
     @Operation(summary = "This method allows to put money on account")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Putting money on account is successfully "),
