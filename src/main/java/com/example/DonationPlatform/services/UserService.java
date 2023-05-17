@@ -1,112 +1,346 @@
 package com.example.DonationPlatform.services;
 
-import com.example.DonationPlatform.domain.CardForUsersView;
-import com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo;
-import com.example.DonationPlatform.domain.Roles;
+import com.example.DonationPlatform.domain.create.CardForUserView;
+import com.example.DonationPlatform.domain.create.CreateUserByAdmin;
+import com.example.DonationPlatform.domain.daocard.DaoCard;
+import com.example.DonationPlatform.domain.daotransaction.DaoTransactionWithAllInfo;
+import com.example.DonationPlatform.domain.daouser.DaoUserWithAllInfo;
+import com.example.DonationPlatform.domain.enums.Roles;
 import com.example.DonationPlatform.domain.request.RegistrationOfUsers;
-import com.example.DonationPlatform.repository.IDAOCardRepository;
-import com.example.DonationPlatform.repository.IUserRepository;
+import com.example.DonationPlatform.domain.update.UpdateUserByAdmin;
+import com.example.DonationPlatform.domain.update.UpdateUserByUser;
+import com.example.DonationPlatform.exceptions.cardsExceptions.AttemptToReplenishTheAccountWithANonExistedCardException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardExpiredException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundExceptionByCardNumberException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardWasDeletedException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NoRightToPerformActionsException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByIdException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByLoginException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithEmailException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithLoginException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithNickNameException;
+import com.example.DonationPlatform.repository.IdaoCardRepository;
+import com.example.DonationPlatform.repository.IdaoTransactionWithAllInformation;
+import com.example.DonationPlatform.repository.IuserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
-    private IUserRepository userRepository;
-
-    private IDAOCardRepository iCardRepository;
+    final String adminRole = String.valueOf(Roles.ADMIN);
+    private final IuserRepository userRepository;
+    private final IdaoCardRepository cardRepository;
+    private final CardService cardService;
+    private final IdaoTransactionWithAllInformation iDaoTransactionRepositoryWithAllInformation;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(IUserRepository userRepository, IDAOCardRepository iCardRepository) {
+    public UserService(IuserRepository userRepository, IdaoCardRepository iCardRepository, CardService cardService, IdaoTransactionWithAllInformation iDaoTransactionRepositoryWithAllInformation, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.iCardRepository = iCardRepository;
+        this.cardRepository = iCardRepository;
+        this.cardService = cardService;
+        this.iDaoTransactionRepositoryWithAllInformation = iDaoTransactionRepositoryWithAllInformation;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public Optional<DAOUserWithAllInfo> getUserById(int id) {
-        Optional<DAOUserWithAllInfo> userById = userRepository.findById(id);
-        return userById;
-    }
+    public Optional<DaoUserWithAllInfo> getUserById(int id) throws NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
 
-    public Optional<List<DAOUserWithAllInfo>> getAllUser() {
-        Optional<List<DAOUserWithAllInfo>> listOfUsers = Optional.ofNullable(userRepository.findAll());
-        return listOfUsers;
-    }
+        String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        DaoUserWithAllInfo securityUser = userRepository.findByLogin(loginSecurityUser).orElseThrow(() -> new NotFoundUserInDataBaseByIdException(id));
+        int idSecurityUser = securityUser.getId();
+        String roleSecurityUser = securityUser.getRole();
 
-    public DAOUserWithAllInfo updateUser(DAOUserWithAllInfo user) {
-        return userRepository.saveAndFlush(user);
-    }
+        if ((idSecurityUser == id) || (roleSecurityUser.equals(adminRole))) {
 
-    public DAOUserWithAllInfo createUser(DAOUserWithAllInfo user) {
-        if (userRepository.existsUserByLoginOrEmailOrNickName(user.getLogin(), user.getEmail(), user.getNickName())) {
-            return new DAOUserWithAllInfo();
+            Optional<DaoUserWithAllInfo> userById = userRepository.findById(id);
+            if (userById.isEmpty()) {
+                throw new NotFoundUserInDataBaseByIdException(id);
+            }
+            return userById;
+        } else {
+            throw new NoRightToPerformActionsException();
         }
-        user.setDateOfCreateAccount(new Date(new java.util.Date().getTime()));
-        return userRepository.save(user);
+    }
+
+    public Optional<List<DaoUserWithAllInfo>> getAllUser() {
+        return Optional.of(userRepository.findAll());
+    }
+
+    @Transactional
+    public boolean updateUserByAdmin(UpdateUserByAdmin user) throws NotFoundUserInDataBaseByIdException, NotFoundUserInDataBaseByLoginException, UserIsAlreadyExistInDataBaseWithEmailException, UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithLoginException {
+
+        DaoUserWithAllInfo userFromDataBase = userRepository.findById(user.getId()).orElseThrow(() -> new NotFoundUserInDataBaseByIdException(user.getId()));
+
+        DaoUserWithAllInfo updaterUserByAdmin = new DaoUserWithAllInfo();
+
+        updaterUserByAdmin.setId(user.getId());
+
+        if (!userRepository.existsUserByEmail(user.getEmail())) {
+            updaterUserByAdmin.setEmail(user.getEmail());
+        } else if (user.getEmail().equals(userFromDataBase.getEmail())) {
+            updaterUserByAdmin.setEmail(userFromDataBase.getEmail());
+        } else {
+            throw new UserIsAlreadyExistInDataBaseWithEmailException(user.getEmail());
+        }
+
+        if (!userRepository.existsUserByNickName(user.getNickName())) {
+            updaterUserByAdmin.setNickName(user.getNickName());
+        } else if (user.getNickName().equals(userFromDataBase.getNickName())) {
+            updaterUserByAdmin.setNickName(userFromDataBase.getNickName());
+        } else {
+            throw new UserIsAlreadyExistInDataBaseWithNickNameException(user.getNickName());
+        }
+
+        if (!userRepository.existsUserByLogin(user.getLogin())) {
+            updaterUserByAdmin.setLogin(user.getLogin());
+        } else if (user.getLogin().equals(userFromDataBase.getLogin())) {
+            updaterUserByAdmin.setLogin(userFromDataBase.getLogin());
+        } else {
+            throw new UserIsAlreadyExistInDataBaseWithLoginException(user.getLogin());
+        }
+
+        updaterUserByAdmin.setCurrentAmountOnAccount(userFromDataBase.getCurrentAmountOnAccount());
+        updaterUserByAdmin.setDateOfCreateAccount(userFromDataBase.getDateOfCreateAccount());
+        updaterUserByAdmin.setTotalAmountOfTransfers(userFromDataBase.getTotalAmountOfTransfers());
+        updaterUserByAdmin.setDeleteOfAccount(userFromDataBase.getDeleteOfAccount());
+        updaterUserByAdmin.setBirthdate(userFromDataBase.getBirthdate());
+
+        if (!(user.getPassword() == null)) {
+            updaterUserByAdmin.setPassword(user.getPassword());
+        } else {
+            updaterUserByAdmin.setPassword(userFromDataBase.getPassword());
+        }
+
+        if (!(user.getRole() == null)) {
+            updaterUserByAdmin.setRole(user.getRole());
+        } else {
+            updaterUserByAdmin.setRole(userFromDataBase.getRole());
+        }
+
+        if (!(user.getRatingOfUsers() == null)) {
+            updaterUserByAdmin.setRatingOfUsers(user.getRatingOfUsers());
+        } else {
+            updaterUserByAdmin.setRatingOfUsers(userFromDataBase.getRatingOfUsers());
+        }
+
+        userRepository.save(updaterUserByAdmin);
+        return true;
+    }
+
+    @Transactional
+    public boolean updateUserByUser(UpdateUserByUser user) throws NotFoundUserInDataBaseByLoginException, NoRightToPerformActionsException, UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithEmailException, NotFoundUserInDataBaseByIdException {
+
+        String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        int idSecurityUser = userRepository.findByLogin(loginSecurityUser).orElseThrow(() -> new NotFoundUserInDataBaseByLoginException(loginSecurityUser)).getId();
+
+        DaoUserWithAllInfo userFromDataBase = userRepository.findById(user.getId()).orElseThrow(() -> new NotFoundUserInDataBaseByIdException(user.getId()));
+
+        DaoUserWithAllInfo updatedUserByUser = new DaoUserWithAllInfo();
+
+        updatedUserByUser.setId(user.getId());
+
+
+        if (idSecurityUser == user.getId()) {
+            if (!userRepository.existsUserByEmail(user.getEmail())) {
+                updatedUserByUser.setEmail(user.getEmail());
+            } else if (user.getEmail().equals(userFromDataBase.getEmail())) {
+                updatedUserByUser.setEmail(user.getEmail());
+            } else {
+                throw new UserIsAlreadyExistInDataBaseWithEmailException(user.getEmail());
+            }
+
+            if (!userRepository.existsUserByNickName(user.getNickName())) {
+                updatedUserByUser.setNickName(user.getNickName());
+            } else if (user.getNickName().equals(userFromDataBase.getNickName())) {
+                updatedUserByUser.setNickName(userFromDataBase.getNickName());
+            } else {
+                throw new UserIsAlreadyExistInDataBaseWithNickNameException(user.getNickName());
+            }
+
+            if (!userRepository.existsUserByLogin(user.getLogin())) {
+                updatedUserByUser.setLogin(user.getLogin());
+            } else if (user.getLogin().equals(userFromDataBase.getLogin())) {
+                updatedUserByUser.setLogin(userFromDataBase.getLogin());
+            } else {
+                throw new UserIsAlreadyExistInDataBaseWithLoginException(user.getLogin());
+            }
+
+            updatedUserByUser.setCurrentAmountOnAccount(userFromDataBase.getCurrentAmountOnAccount());
+            updatedUserByUser.setDateOfCreateAccount(userFromDataBase.getDateOfCreateAccount());
+            updatedUserByUser.setTotalAmountOfTransfers(userFromDataBase.getTotalAmountOfTransfers());
+            updatedUserByUser.setDeleteOfAccount(userFromDataBase.getDeleteOfAccount());
+            updatedUserByUser.setRole(userFromDataBase.getRole());
+            updatedUserByUser.setRatingOfUsers(userFromDataBase.getRatingOfUsers());
+
+            if (!(user.getPassword() == null)) {
+                updatedUserByUser.setPassword(user.getPassword());
+            } else {
+                updatedUserByUser.setPassword(userFromDataBase.getPassword());
+            }
+
+            if (!(user.getBirthdate() == null)) {
+                updatedUserByUser.setBirthdate(user.getBirthdate());
+            } else {
+                updatedUserByUser.setPassword(userFromDataBase.getPassword());
+            }
+
+            userRepository.save(updatedUserByUser);
+            return true;
+        } else {
+            throw new NoRightToPerformActionsException();
+        }
+    }
+
+    public DaoUserWithAllInfo createUser(CreateUserByAdmin user) throws UserIsAlreadyExistInDataBaseWithEmailException, UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithLoginException {
+
+        String emailOfUser = user.getEmail();
+        String nickNameOfUser = user.getNickName();
+        String loginOfUser = user.getLogin();
+
+        if (userRepository.existsUserByEmail(emailOfUser)) {
+            throw new UserIsAlreadyExistInDataBaseWithEmailException(emailOfUser);
+        } else if (userRepository.existsUserByNickName(nickNameOfUser)) {
+            throw new UserIsAlreadyExistInDataBaseWithNickNameException(nickNameOfUser);
+        } else if (userRepository.existsUserByLogin(loginOfUser)) {
+            throw new UserIsAlreadyExistInDataBaseWithLoginException(loginOfUser);
+        }
+
+        DaoUserWithAllInfo userIntoDataBase = new DaoUserWithAllInfo();
+
+        userIntoDataBase.setEmail(user.getEmail());
+        userIntoDataBase.setPassword(passwordEncoder.encode(user.getPassword()));
+        userIntoDataBase.setLogin(user.getLogin());
+        userIntoDataBase.setNickName(user.getNickName());
+        userIntoDataBase.setBirthdate(user.getBirthdate());
+        userIntoDataBase.setDateOfCreateAccount(user.getDateOfCreateAccount());
+        userIntoDataBase.setTotalAmountOfTransfers(user.getTotalAmountOfTransfers());
+        userIntoDataBase.setCurrentAmountOnAccount(user.getCurrentAmountOnAccount());
+        userIntoDataBase.setRatingOfUsers(user.getRatingOfUsers());
+        userIntoDataBase.setDeleteOfAccount(user.isDeleteOfAccount());
+        userIntoDataBase.setRole(user.getRole());
+
+        return userRepository.save(userIntoDataBase);
     }
 
     public boolean userIsDeleted(int id) {
-        if (userRepository.isDeletedUserInDataBaseByIdUserChecked(id)) {
-            return true;
-        } else {
-            return false;
-        }
+        return userRepository.isDeletedUserInDataBaseByIdUserChecked(id);
     }
 
-    public boolean userRegistration(RegistrationOfUsers registrationOfUsers) {
-        DAOUserWithAllInfo user = new DAOUserWithAllInfo();
+    public boolean userRegistration(RegistrationOfUsers registrationOfUsers) throws UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithEmailException, UserIsAlreadyExistInDataBaseWithNickNameException {
+        String login = registrationOfUsers.getLogin();
+        String email = registrationOfUsers.getEmail();
+        String nickName = registrationOfUsers.getNickName();
+
+        boolean userWithSameLoginExistInDataBase = userRepository.existsUserByLogin(login);
+        boolean userWithSameEmailExistInDataBase = userRepository.existsUserByEmail(email);
+        boolean userWithSameNickNameExistInDataBase = userRepository.existsUserByNickName(nickName);
+
+        if (userWithSameLoginExistInDataBase) {
+            throw new UserIsAlreadyExistInDataBaseWithLoginException(login);
+        } else if (userWithSameEmailExistInDataBase) {
+            throw new UserIsAlreadyExistInDataBaseWithEmailException(email);
+        } else if (userWithSameNickNameExistInDataBase) {
+            throw new UserIsAlreadyExistInDataBaseWithNickNameException(nickName);
+        }
+
+        DaoUserWithAllInfo user = new DaoUserWithAllInfo();
         user.setEmail(registrationOfUsers.getEmail());
         user.setLogin(registrationOfUsers.getLogin());
-        user.setPassword(registrationOfUsers.getPassword()); // закодировать когда секурити использовать буду user.setPassword(passwordEncoder.encode(registrationOfUsers.getPassword()));
+        user.setPassword(passwordEncoder.encode(registrationOfUsers.getPassword()));
         user.setBirthdate(registrationOfUsers.getBirthdate());
         user.setNickName(registrationOfUsers.getNickName());
 
         user.setDateOfCreateAccount(new Date(new java.util.Date().getTime()));
         user.setTotalAmountOfTransfers(0);
-        user.setRatingOfUsers("0");
+        user.setRatingOfUsers("firstLevel");
         user.setDeleteOfAccount(false);
         user.setRole(String.valueOf(Roles.USER));
 
-        Optional<DAOUserWithAllInfo> userSaved = Optional.ofNullable(userRepository.save(user));
+        Optional<DaoUserWithAllInfo> userSaved = Optional.of(userRepository.save(user));
 
         return userSaved.isPresent();
     }
 
-    public boolean deleteUser(int id) {
-        if (!userIsDeleted(id)) {
-            userRepository.deleteById(id);
-            return true;
-        }
-        return false;
-    }
+    public boolean deleteUser(int id) throws NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
 
-    @Transactional
-    public boolean putMoneyOnCurrentAmount(int sum, int userId, CardForUsersView card) {
+        String userLogin = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        String cardNumber = card.getNumberOfCard();
-        int cardId = card.getId();
+        DaoUserWithAllInfo securityUser = userRepository.findByLogin(userLogin).orElseThrow(() -> new NotFoundUserInDataBaseByIdException(id));
+        int securityUserId = securityUser.getId();
+        String securityUserRole = securityUser.getRole();
 
-        if (userRepository.cardOwnershipCheck(userId, cardNumber)) {
-            if (!iCardRepository.isDeletedCardInDataBaseByIdCardsChecked(cardId)) {
-                userRepository.putMoneyOnCurrentAmount(sum, userId);
+        if (securityUserId == id || securityUserRole.equals(adminRole)) {
+            if (!userIsDeleted(id)) {
+                userRepository.deleteById(id);
                 return true;
-            } else {
-                ;
             }
         }
-        return false;
+        throw new NoRightToPerformActionsException();
+    }
+
+    public boolean putMoneyOnCurrentAmount(int sum, CardForUserView card) throws AttemptToReplenishTheAccountWithANonExistedCardException, CardWasDeletedException, NotFoundUserInDataBaseByLoginException, CardNotFoundExceptionByCardNumberException, CardExpiredException {
+
+        String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        DaoUserWithAllInfo userFromDataBase = userRepository.findByLogin(loginSecurityUser).orElseThrow(() -> new NotFoundUserInDataBaseByLoginException(loginSecurityUser));
+        int userId = userFromDataBase.getId();
+
+        String cardNumber = card.getNumberOfCard();
+        boolean userIsOwnerThisCard = userRepository.cardOwnershipCheck(userId, cardNumber);
+        boolean cardWasNotDeleted = cardRepository.isDeletedCardInDataBaseByNumberCardCardsChecked(cardNumber);
+
+        if (cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
+            if (userIsOwnerThisCard) {
+                if (!cardWasNotDeleted) {
+                    if (!cardService.cardIsExpired(card)) {
+                        userRepository.putMoneyOnCurrentAmount(sum, userId);
+                        return true;
+                    } else {
+                        throw new CardExpiredException(card.getNumberOfCard());
+                    }
+                } else {
+                    throw new CardWasDeletedException(cardNumber);
+                }
+            } else {
+                throw new AttemptToReplenishTheAccountWithANonExistedCardException(userId);
+            }
+        } else {
+            throw new CardNotFoundExceptionByCardNumberException(cardNumber);
+        }
+    }
+
+    public ArrayList<DaoCard> getCardsOfUserByIdOfUser(int id) throws NotFoundUserInDataBaseByLoginException, NoRightToPerformActionsException {
+
+        String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        DaoUserWithAllInfo securityUser = userRepository.findByLogin(loginSecurityUser).orElseThrow(() -> new NotFoundUserInDataBaseByLoginException(loginSecurityUser));
+        int idSecurityUser = securityUser.getId();
+        String idSecurityRole = securityUser.getRole();
+
+        if (idSecurityUser == id || idSecurityRole.equals(adminRole)) {
+            return cardRepository.findAllCardByUserId(id);
+        } else {
+            throw new NoRightToPerformActionsException();
+        }
+    }
+
+    public Optional<ArrayList<DaoTransactionWithAllInfo>> getAllOfTransactionAboutUserByIdForAdmin(int id) throws NotFoundUserInDataBaseByIdException {
+        boolean existUserInDataBase = userRepository.existsById(id);
+
+        if (!existUserInDataBase) {
+            throw new NotFoundUserInDataBaseByIdException(id);
+        }
+
+        Optional<ArrayList<DaoTransactionWithAllInfo>> listOptional = Optional.ofNullable(iDaoTransactionRepositoryWithAllInformation.findAllBySenderId(id));
+        return listOptional;
     }
 }
-//TODO проверить когда подключу спрингсекурити
-   /* public boolean checkingUserRights(int id) throws NoRightToPerformActions {
-        int authenticatedUserId = SecurityContextHolder.getContext().getAuthentication().getId();
-        if(authenticatedUserId == id ){
-            return true;
-        } else {
-            throw new NoRightToPerformActions();
-            return false;
-        }*/

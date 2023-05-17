@@ -1,10 +1,22 @@
 package com.example.DonationPlatform.services;
 
-import com.example.DonationPlatform.domain.CardForUsersView;
-import com.example.DonationPlatform.domain.DAOCard.DAOCard;
+import com.example.DonationPlatform.domain.create.CardForUserView;
+import com.example.DonationPlatform.domain.daocard.DaoCard;
+import com.example.DonationPlatform.domain.daouser.DaoUserWithAllInfo;
+import com.example.DonationPlatform.domain.enums.Roles;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardAlreadyExistsInDataBaseException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardAlreadyExistsInDataBaseWithCvvException;
 import com.example.DonationPlatform.exceptions.cardsExceptions.CardExpiredException;
-import com.example.DonationPlatform.repository.IDAOCardRepository;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundByCardIdException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundExceptionByCardNumberException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.NotEnteredCardNumberException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NoRightToPerformActionsException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByIdException;
+import com.example.DonationPlatform.repository.IdaoCardRepository;
+import com.example.DonationPlatform.repository.IuserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
@@ -14,32 +26,77 @@ import java.util.Optional;
 
 @Service
 public class CardService {
-    private IDAOCardRepository cardRepository;
+
+    final String adminRole = String.valueOf(Roles.ADMIN);
+    private final IdaoCardRepository cardRepository;
+    private final IuserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public CardService(IDAOCardRepository cardRepository) {
+    public CardService(IdaoCardRepository cardRepository, IuserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.cardRepository = cardRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public ArrayList<DAOCard> getCardsOfUserByIdOfUser(int id) {
-        return cardRepository.findAllCardByUserId(id);
-    }
+    public boolean deleteCardOfUserByCardNumber(CardForUserView card) throws CardNotFoundExceptionByCardNumberException, NotEnteredCardNumberException, NoRightToPerformActionsException {
 
-    public boolean deleteCardOfUserByCardNumber(CardForUsersView card) {
-        if (cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
-            cardRepository.deleteCardByNumberOfCard(card.getNumberOfCard());
-            return true;
+        String userLogin = SecurityContextHolder.getContext().getAuthentication().getName();
+        int userId = userRepository.findByLogin(userLogin).get().getId();
+
+        boolean existsCardByNumberOfCard = cardRepository.existsCardByNumberOfCard(card.getNumberOfCard());
+
+        Optional<String> cardNumberOptional = Optional.ofNullable(card.getNumberOfCard());
+        String cardNumber = cardNumberOptional.orElseThrow(() -> new NotEnteredCardNumberException());
+
+        if (existsCardByNumberOfCard) {
+            if (userRepository.cardOwnershipCheck(userId, cardNumber)) {
+                cardRepository.deleteCardByNumberOfCard(card.getNumberOfCard());
+                return true;
+            } else {
+                throw new NoRightToPerformActionsException();
+            }
         } else {
-            return false;
+            throw new CardNotFoundExceptionByCardNumberException(card.getNumberOfCard());
         }
     }
 
-    public Optional<DAOCard> getCardById(int id) {
-        Optional<DAOCard> cardOptional = cardRepository.findById(id);
-        if (cardOptional.isPresent()) {
-            if (!cardRepository.isDeletedCardInDataBaseByIdCardsChecked(id)) {
-                return cardOptional; //TODO: возвращает херню
+
+    public Optional<DaoCard> getCardById(int id) throws CardNotFoundByCardIdException, NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
+
+        if (!cardRepository.existsById(id)) {
+            throw new CardNotFoundByCardIdException(id);
+        }
+
+        String loginSecurityUser = SecurityContextHolder.getContext().getAuthentication().getName();
+        DaoUserWithAllInfo securityUser = userRepository.findByLogin(loginSecurityUser).orElseThrow(() -> new NotFoundUserInDataBaseByIdException(id));
+        int idSecurityUser = securityUser.getId();
+        String roleSecurityUser = securityUser.getRole();
+
+        ArrayList<DaoCard> listOfUserCards = cardRepository.findAllCardByUserId(idSecurityUser);
+        boolean searchResult = false;
+
+        for (DaoCard cards : listOfUserCards) {
+            if (cards.getId() == id) {
+                searchResult = true;
+                break;
             }
+        }
+
+        Optional<DaoCard> cardOptional;
+
+        if (searchResult || roleSecurityUser.equals(adminRole)) {
+            cardOptional = cardRepository.findById(id);
+            if (cardOptional.isPresent()) {
+                if (!cardRepository.isDeletedCardInDataBaseByIdCardsChecked(id)) {
+                    return cardOptional;
+                }
+            } else {
+                throw new CardNotFoundByCardIdException(id);
+            }
+        } else {
+            throw new NoRightToPerformActionsException();
         }
         return cardOptional;
     }
@@ -48,24 +105,45 @@ public class CardService {
         return cardRepository.existsCardByNumberOfCard(numberOfCard);
     }
 
-    public boolean creatCardInDatabase(DAOCard card) {
-        if (!cardRepository.existsCardByNumberOfCard(card.getNumberOfCard())) {
-            Optional<DAOCard> cardOptional = Optional.ofNullable(cardRepository.save(card));
-            return cardOptional.isPresent();
+    public boolean createCardInDatabase(DaoCard card) throws CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
+
+        String userLogin = SecurityContextHolder.getContext().getAuthentication().getName();
+        int userId = userRepository.findByLogin(userLogin).get().getId();
+
+        Date cardExpiredDate = card.getExpireDate();
+        String cardNumber = card.getNumberOfCard();
+        String cardCvv = card.getCvv();
+
+        boolean existsByCvv = cardRepository.existsByCvv(cardCvv);
+
+        if (!checkCardInDataBase(cardNumber)) {
+            if (!existsByCvv) {
+                DaoCard cardForDataBase = new DaoCard();
+                cardForDataBase.setNumberOfCard(cardNumber);
+                cardForDataBase.setExpireDate(cardExpiredDate);
+                cardForDataBase.setCvv(cardCvv);
+                cardRepository.save(cardForDataBase);
+                int cardId = cardForDataBase.getId();
+                cardRepository.putCardAndHisOwnerInDataBase(userId, cardId);
+                return true;
+            } else {
+                throw new CardAlreadyExistsInDataBaseWithCvvException();
+            }
+        } else {
+            throw new CardAlreadyExistsInDataBaseException(card.getNumberOfCard());
         }
-            return false;
     }
 
-    public boolean cardIsExpired(CardForUsersView card) throws CardExpiredException {
+
+    public boolean cardIsExpired(CardForUserView card) throws CardExpiredException {
         Date expireDateOfCard = card.getExpireDate();
         String cardNumber = card.getNumberOfCard();
         LocalDate localDate = LocalDate.now();
         Date currentDate = Date.valueOf(localDate);
 
-        if(currentDate.after(expireDateOfCard)){
-            //cardRepository.deleteCardByNumberOfCard(cardNumber);
-           // throw new CardExpiredException();
-            return true;
+        boolean cardIsExpired = currentDate.after(expireDateOfCard);
+        if (cardIsExpired) {
+            throw new CardExpiredException(cardNumber);
         }
         return false;
     }

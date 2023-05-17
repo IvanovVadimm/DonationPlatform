@@ -1,16 +1,32 @@
 package com.example.DonationPlatform.controllers;
 
-
-import com.example.DonationPlatform.domain.CardForUsersView;
-import com.example.DonationPlatform.domain.DAOCard.DAOCard;
-import com.example.DonationPlatform.domain.DAOTransaction.DAOTransactionWithAllInfo;
-import com.example.DonationPlatform.domain.DAOUser.DAOUserWithAllInfo;
-import com.example.DonationPlatform.domain.TransactionAboutUserById;
+import com.example.DonationPlatform.domain.create.CardForUserView;
+import com.example.DonationPlatform.domain.create.CreateUserByAdmin;
+import com.example.DonationPlatform.domain.daocard.DaoCard;
+import com.example.DonationPlatform.domain.daotransaction.DaoTransactionWithAllInfo;
+import com.example.DonationPlatform.domain.daouser.DaoUserWithAllInfo;
 import com.example.DonationPlatform.domain.request.RegistrationOfUsers;
+import com.example.DonationPlatform.domain.response.TransactionAboutUserById;
+import com.example.DonationPlatform.domain.update.UpdateUserByAdmin;
+import com.example.DonationPlatform.domain.update.UpdateUserByUser;
+import com.example.DonationPlatform.exceptions.cardsExceptions.AttemptToReplenishTheAccountWithANonExistedCardException;
 import com.example.DonationPlatform.exceptions.cardsExceptions.CardExpiredException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundExceptionByCardNumberException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardWasDeletedException;
+import com.example.DonationPlatform.exceptions.usersExceptions.InvalidCreateUserException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NoRightToPerformActionsException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByIdException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByLoginException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithEmailException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithLoginException;
+import com.example.DonationPlatform.exceptions.usersExceptions.UserIsAlreadyExistInDataBaseWithNickNameException;
 import com.example.DonationPlatform.services.CardService;
 import com.example.DonationPlatform.services.TransactionService;
 import com.example.DonationPlatform.services.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,14 +50,10 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/user")
 public class UserController {
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-
-    private CardService cardService;
-
-    private UserService userService;
-
-    private TransactionService transactionService;
+    private final CardService cardService;
+    private final UserService userService;
+    private final TransactionService transactionService;
 
     @Autowired
     public UserController(CardService cardService, UserService userService, TransactionService transactionService) {
@@ -50,28 +62,54 @@ public class UserController {
         this.transactionService = transactionService;
     }
 
+    @Operation(summary = "This method will created user by sign up")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User with same data exist in data base"),
+            @ApiResponse(responseCode = "201", description = "User was created successfully"),
+            @ApiResponse(responseCode = "409", description = "User was not created")
+    })
     @PostMapping("/registration")
-    public ResponseEntity registration(@RequestBody RegistrationOfUsers registrationOfUsers) {
+    public ResponseEntity registration(@RequestBody RegistrationOfUsers registrationOfUsers, BindingResult bindingResult) throws UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithEmailException, InvalidCreateUserException {
+        if (bindingResult.hasErrors()) {
+            for (ObjectError o : bindingResult.getAllErrors()) {
+                log.warn("BindingResult has Error: " + o);
+                throw new InvalidCreateUserException();
+            }
+        }
         if (userService.userRegistration(registrationOfUsers)) {
+            log.info("User was created");
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
+            log.error("User was not created!");
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
-
+    @Operation(summary = "This method will find user by id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User was found"),
+            @ApiResponse(responseCode = "404", description = "User wasn't found"),
+            @ApiResponse(responseCode = "403", description = "No rights to perform action")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<DAOUserWithAllInfo> getUserById(@PathVariable int id) {
-        Optional<DAOUserWithAllInfo> userOptional = userService.getUserById(id);
+    public ResponseEntity<DaoUserWithAllInfo> getUserById(@PathVariable int id) throws NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
+        Optional<DaoUserWithAllInfo> userOptional = userService.getUserById(id);
         if (userOptional.isPresent()) {
+            log.info("User with id: " + id + " was found.");
             return new ResponseEntity<>(userOptional.get(), HttpStatus.FOUND);
         } else {
+            log.info("User with id: " + id + " was not found!");
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
+    @Operation(summary = "This method will find all of user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User was found"),
+            @ApiResponse(responseCode = "404", description = "User wasn't found"),
+    })
     @GetMapping("/all")
-    public ResponseEntity<List<DAOUserWithAllInfo>> getAllUser() {
-        Optional<List<DAOUserWithAllInfo>> optionalListOfUsers = userService.getAllUser();
+    public ResponseEntity<List<DaoUserWithAllInfo>> getAllUser() {
+        Optional<List<DaoUserWithAllInfo>> optionalListOfUsers = userService.getAllUser();
         if (optionalListOfUsers.isPresent()) {
             return new ResponseEntity<>(optionalListOfUsers.get(), HttpStatus.FOUND);
         } else {
@@ -79,86 +117,166 @@ public class UserController {
         }
     }
 
-    @PutMapping
-    public ResponseEntity updateUser(@RequestBody DAOUserWithAllInfo user) {
-        Optional<DAOUserWithAllInfo> optionalUser = Optional.of(userService.updateUser(user));
-        if (optionalUser.isPresent()) {
-            return new ResponseEntity<>(HttpStatus.CREATED);
-        } else {
+    @Operation(summary = "This method allows update data of user by admin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User was found"),
+            @ApiResponse(responseCode = "404", description = "User wasn't found"),
+            @ApiResponse(responseCode = "200", description = "User data was updated"),
+            @ApiResponse(responseCode = "409", description = "User data wasn't updated"),
+    })
+    @PutMapping("/updateByAdmin")
+    public ResponseEntity updateUserByAdmin(@RequestBody UpdateUserByAdmin user) throws NotFoundUserInDataBaseByIdException, NotFoundUserInDataBaseByLoginException, UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithEmailException {
+
+        boolean resultOfUpdate = userService.updateUserByAdmin(user);
+
+        if (resultOfUpdate) {
+            log.info("User information have be just updated");
             return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            log.error("User information have not been updated");
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
 
+    @Operation(summary = "This method allows update data of user by user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User was found"),
+            @ApiResponse(responseCode = "404", description = "User wasn't found"),
+            @ApiResponse(responseCode = "200", description = "User data was updated"),
+            @ApiResponse(responseCode = "409", description = "User data wasn't updated"),
+            @ApiResponse(responseCode = "403", description = "No rights to perform actions"),
+    })
+    @PutMapping("/update")
+    public ResponseEntity updateUserByUser(@RequestBody UpdateUserByUser user) throws NotFoundUserInDataBaseByLoginException, NoRightToPerformActionsException, UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithNickNameException, NotFoundUserInDataBaseByIdException, UserIsAlreadyExistInDataBaseWithEmailException {
+
+        boolean resulOfUpdate = userService.updateUserByUser(user);
+
+        if (resulOfUpdate) {
+            log.info("User information have be just updated");
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            log.error("User information have not be updated");
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+        }
+    }
+
+    @Operation(summary = "This method allows to create user by admin without checkout to registration")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "User was created before"),
+            @ApiResponse(responseCode = "409", description = "User wasn't created"),
+            @ApiResponse(responseCode = "400", description = "Data of user is not validate"),
+    })
     @PostMapping
-    public ResponseEntity createUser(@RequestBody DAOUserWithAllInfo user, BindingResult bindingResult) {
+    public ResponseEntity createUser(@RequestBody CreateUserByAdmin user, BindingResult bindingResult) throws UserIsAlreadyExistInDataBaseWithNickNameException, UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithEmailException {
+
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
+                log.warn("BindingResult has Error: " + o);
                 return new ResponseEntity(HttpStatus.BAD_REQUEST);
             }
         }
-        Optional<DAOUserWithAllInfo> optionalUser = Optional.ofNullable(userService.createUser(user));
-        if (optionalUser.isPresent() && optionalUser.get().getId() != 0) {
-            //log through aspects in future
+
+        Optional<DaoUserWithAllInfo> optionalUser = Optional.ofNullable(userService.createUser(user));
+        if (optionalUser.isPresent()) {
+            log.info("User have created successfully.");
             return new ResponseEntity(HttpStatus.CREATED);
         } else {
-            //log through aspects in future
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            log.error("User have not created!");
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
     }
-
+    @Operation(summary = "This method allows to delete user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User was deleted"),
+            @ApiResponse(responseCode = "409", description = "User wasn't deleted"),
+            @ApiResponse(responseCode = "403", description = "User have not right to perform"),
+            @ApiResponse(responseCode = "404", description = "Not found user in Data base"),
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteUser(@PathVariable int id) {
+    public ResponseEntity deleteUser(@PathVariable int id) throws NoRightToPerformActionsException, NotFoundUserInDataBaseByIdException {
 
         if (userService.deleteUser(id)) {
-            ////log through aspects in future
+            log.info("User with id: " + id + "have just deleted");
             return new ResponseEntity(HttpStatus.OK);
         } else {
-            //log through aspects in future
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            log.error("User with id: " + id + "have not deleted yet!");
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
     }
 
-    @GetMapping("/aoubi/{id}") // получение всех карточек пользователя по id
-    public ResponseEntity<ArrayList<DAOCard>> getCardsOfUserByIdOfUser(@PathVariable int id) {
-        ArrayList<DAOCard> arrayList = cardService.getCardsOfUserByIdOfUser(id);
-        return new ResponseEntity<>(arrayList, HttpStatus.OK);
+    @Operation(summary = "This method allows to get all cards of user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "Cards of users was found"),
+            @ApiResponse(responseCode = "403", description = "User have not right to perform"),
+            @ApiResponse(responseCode = "404", description = "Not found user in Data base"),
+    })
+    @GetMapping("/allCardsOfUser/{id}")
+    public ResponseEntity<ArrayList<DaoCard>> getCardsOfUserByIdOfUser(@PathVariable int id) throws NoRightToPerformActionsException, NotFoundUserInDataBaseByLoginException {
+
+        Optional<ArrayList<DaoCard>> cardListOptional = Optional.ofNullable(userService.getCardsOfUserByIdOfUser(id));
+        if (cardListOptional.isPresent()) {
+            log.info("Getting a list of cards for a user with id: " + id);
+            return new ResponseEntity<>(cardListOptional.get(), HttpStatus.FOUND);
+        } else {
+            log.error("Failed to get list of user cards with id: " + id);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
 
-    @GetMapping("/alltr/{id}")
-    public ResponseEntity<ArrayList<TransactionAboutUserById>> getAllInfoAboutTransactionByUserIdForUser(@PathVariable int id) {
+    @Operation(summary = "This method allows to get small info all transaction of user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "Transaction of users was found"),
+            @ApiResponse(responseCode = "403", description = "User have not right to perform"),
+            @ApiResponse(responseCode = "404", description = "Not found user in Data base"),
+            @ApiResponse(responseCode = "404", description = "Not found transactions in Data base"),
+    })
+    @GetMapping("/allTransactionForUser/{id}")
+    public ResponseEntity<ArrayList<TransactionAboutUserById>> getAllInfoAboutTransactionByUserIdForUser(@PathVariable int id)
+            throws NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
+
         Optional<ArrayList<TransactionAboutUserById>> optionalTransactionsAboutUser = transactionService.getAllOfTransactionAboutUserByUserIdForUser(id);
         if (optionalTransactionsAboutUser.isPresent()) {
+            log.info("Getting a list of transaction for a user with id: " + id);
             return new ResponseEntity<>(optionalTransactionsAboutUser.get(), HttpStatus.FOUND);
         } else {
+            log.error("Failed to get list of user transaction for a user with id: " + id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    @GetMapping("/alltrforadmin/{id}")
-    public ResponseEntity<ArrayList<DAOTransactionWithAllInfo>> getAllInfoAboutTransactionByUserIdForAdmin(@PathVariable int id) {
-        Optional<ArrayList<DAOTransactionWithAllInfo>> optionalTransactionAboutUsers = transactionService.getAllOfTransactionAboutUserByIdForAdmin(id);
+    @Operation(summary = "This method allows to get all info transaction of user by admin")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "302", description = "Transaction of users was found"),
+            @ApiResponse(responseCode = "404", description = "Not found user in Data base"),
+            @ApiResponse(responseCode = "404", description = "Not found transactions in Data base"),
+    })
+    @GetMapping("/allTransactionForAdmin/{id}")
+    public ResponseEntity<ArrayList<DaoTransactionWithAllInfo>> getAllInfoAboutTransactionByUserIdForAdmin(
+            @PathVariable int id) throws NotFoundUserInDataBaseByIdException {
+        Optional<ArrayList<DaoTransactionWithAllInfo>> optionalTransactionAboutUsers = userService.getAllOfTransactionAboutUserByIdForAdmin(id);
         if (optionalTransactionAboutUsers.isPresent()) {
+            log.info("Getting a list of transaction for an admin with user id: " + id);
             return new ResponseEntity<>(optionalTransactionAboutUsers.get(), HttpStatus.FOUND);
         } else {
+            log.error("Failed to get list of user transaction for admin with user id: " + id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
-    @PutMapping("/tuya/{userId}/{sum}")
-    public ResponseEntity putMoneyOnAccountByCard(@RequestBody CardForUsersView card, @PathVariable int userId, @PathVariable int sum) throws CardExpiredException {
-        //try {
-        if (cardService.checkCardInDataBase(card.getNumberOfCard())) {
-            if (!cardService.cardIsExpired(card)) {
-                if (userService.putMoneyOnCurrentAmount(sum, userId, card)) {
-                    return new ResponseEntity<>(HttpStatus.CREATED);
-                }
-            }
-        /*} catch (CardExpiredException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+    @Operation(summary = "This method allows to put money on account")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Putting money on account is successfully "),
+            @ApiResponse(responseCode = "404", description = "Not found user in Data base"),
+            @ApiResponse(responseCode = "404", description = "Not found transactions in Data base"),
+            @ApiResponse(responseCode = "409", description = "Putting wasn't successfully"),
+    })
+    @PutMapping("/putMoney/{sum}")
+    public ResponseEntity putMoneyOnAccountByCard(@RequestBody CardForUserView card,
+                                                  @PathVariable @Parameter int sum) throws CardExpiredException, AttemptToReplenishTheAccountWithANonExistedCardException, CardWasDeletedException, CardNotFoundExceptionByCardNumberException, NotFoundUserInDataBaseByLoginException {
+        if (userService.putMoneyOnCurrentAmount(sum, card)) {
+            log.info("Getting money on account by card with number: " + card.getNumberOfCard());
+            return new ResponseEntity<>(HttpStatus.CREATED);
         }
-        return null;*/
-
-        }
+        log.error("Failed to get money on account by card with number: " + card.getNumberOfCard());
         return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
 }

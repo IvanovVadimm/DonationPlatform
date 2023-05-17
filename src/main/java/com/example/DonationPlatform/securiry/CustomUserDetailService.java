@@ -1,8 +1,7 @@
-/*
 package com.example.DonationPlatform.securiry;
 
-import com.example.DonationPlatform.domain.User;
-import com.example.DonationPlatform.repository.IUserRepository;
+import com.example.DonationPlatform.domain.daouser.DaoUserWithAllInfo;
+import com.example.DonationPlatform.repository.IuserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,17 +11,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class CustomUserDetailService implements UserDetailsService {
 
-
-    private IUserRepository userRepository;
+    private IuserRepository userRepository;
 
     @Autowired
-    public CustomUserDetailService(IUserRepository userRepository) {
+    public CustomUserDetailService(IuserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findUserByLogin(username).orElseThrow(() -> new UsernameNotFoundException(username)); //TODO: написать свои ошибки Exeptions
+        DaoUserWithAllInfo user = userRepository.findByLogin(username).orElseThrow(() -> new UsernameNotFoundException(username));
 
         UserDetails securityUser = org.springframework.security.core.userdetails.User
                 .builder()
@@ -34,4 +32,3 @@ public class CustomUserDetailService implements UserDetailsService {
         return securityUser;
     }
 }
-*/

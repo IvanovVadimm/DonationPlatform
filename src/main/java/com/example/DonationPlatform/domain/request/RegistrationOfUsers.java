@@ -1,22 +1,29 @@
 package com.example.DonationPlatform.domain.request;
 
+import com.example.DonationPlatform.annotation.Email;
+import com.example.DonationPlatform.annotation.Login;
+import com.example.DonationPlatform.annotation.Password;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.hibernate.validator.constraints.Email;
 
-import javax.persistence.Column;
 import javax.validation.constraints.Size;
 import java.sql.Date;
 
 @Data
 @AllArgsConstructor
 public class RegistrationOfUsers {
+
     @Email
     private String email;
+
+    @Login
     private String login;
+
+    @Password
     private String password;
+
     private Date birthdate;
-    @Size(min = 3, max = 200)
-    @Column(name = "nickname")
+
+    @Size(min = 3, max = 50)
     private String nickName;
 }

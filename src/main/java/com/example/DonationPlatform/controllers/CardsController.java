@@ -1,9 +1,20 @@
-
 package com.example.DonationPlatform.controllers;
 
-import com.example.DonationPlatform.domain.CardForUsersView;
-import com.example.DonationPlatform.domain.DAOCard.DAOCard;
+import com.example.DonationPlatform.domain.create.CardForUserView;
+import com.example.DonationPlatform.domain.daocard.DaoCard;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardAlreadyExistsInDataBaseException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardAlreadyExistsInDataBaseWithCvvException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundByCardIdException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundExceptionByCardNumberException;
+import com.example.DonationPlatform.exceptions.cardsExceptions.InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate;
+import com.example.DonationPlatform.exceptions.cardsExceptions.NotEnteredCardNumberException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NoRightToPerformActionsException;
+import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByIdException;
 import com.example.DonationPlatform.services.CardService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,61 +30,62 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.Optional;
-
 @RestController
 @RequestMapping("/cards")
 public class CardsController {
-
     private final Logger log = LoggerFactory.getLogger(this.getClass());
-    private CardService cardService;
+
+    private final CardService cardService;
 
     @Autowired
     public CardsController(CardService cardService) {
         this.cardService = cardService;
     }
 
-
+    @Operation(summary = "This method return card by entering id")
     @GetMapping("/{id}")
-    public ResponseEntity getCardById(@PathVariable int id) {
-        Optional<DAOCard> cardOptional = cardService.getCardById(id);
+    public ResponseEntity getCardById(@Parameter (description = "Expected card id") @PathVariable int id) throws CardNotFoundByCardIdException, NoRightToPerformActionsException, NotFoundUserInDataBaseByIdException {
+        Optional<DaoCard> cardOptional = cardService.getCardById(id);
         if (cardOptional.isPresent()) {
-            return new ResponseEntity<>(cardOptional.get(), HttpStatus.OK);
+            log.info("Getting information about card  with id: " + id);
+            return new ResponseEntity<>(cardOptional.get(), HttpStatus.FOUND);
         } else {
-            return new ResponseEntity(HttpStatus.CONFLICT);
-        }
-    }
-
-    @GetMapping("/ссidb/{numberOfCard}") // проверка существует ли данная карта в базе данных
-    public ResponseEntity checkCard(@PathVariable String numberOfCard) {
-        if (cardService.checkCardInDataBase(numberOfCard)) {
-            return new ResponseEntity<>(HttpStatus.OK);
-        } else {
+            log.info("Failed to get information about card  with id: " + id);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
-    //TODO: проверка валидации на количество символов номера карты
-    @PostMapping // добавление новой карты
-    public ResponseEntity createCard(@RequestBody DAOCard card, BindingResult bindingResult) {
+    @Operation(summary = "This method will created card")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "501", description = "Entered not all data of card"),
+            @ApiResponse(responseCode = "409", description = "Errors of card validation"),
+            @ApiResponse(responseCode = "302", description = "This card is exist")
+    })
+    @PostMapping
+    public ResponseEntity createCard(@RequestBody @Valid DaoCard card, BindingResult bindingResult) throws InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate, CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("BindingResult has Error: " + o);
+                throw new InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate();
             }
         }
-        if (cardService.creatCardInDatabase(card)) {
+        if (cardService.createCardInDatabase(card)) {
+            log.info("Creating card is successfully!");
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            return new ResponseEntity<>(HttpStatus.CONFLICT); // неправильные данные карты
+            log.info("Creating card is unsuccessfully!");
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
     }
 
     @DeleteMapping
-    public ResponseEntity deleteCard(@RequestBody CardForUsersView card) {
+    public ResponseEntity deleteCard(@RequestBody CardForUserView card) throws CardNotFoundExceptionByCardNumberException, NotEnteredCardNumberException, NoRightToPerformActionsException {
         if (cardService.deleteCardOfUserByCardNumber(card)) {
-            return new ResponseEntity(HttpStatus.CREATED);
+            return new ResponseEntity<>(HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
         }
     }
 }

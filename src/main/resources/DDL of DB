@@ -11,52 +11,23 @@ create table user_table
 (
     id                        bigserial
         primary key,
-    email                     varchar(256)               not null
+    email                     varchar(256)                   not null
         unique,
-    login_of_user             varchar(256)               not null
+    login_of_user             varchar(256)                   not null
         unique,
-    password_of_user          varchar(256)               not null,
-    birthdate                 date                       not null,
-    date_of_create_account    date                       not null,
-    deleted_account           boolean      default false not null,
-    total_amount_of_transfers bigint       default 0,
-    nickname                  varchar(200)               not null
+    password_of_user          varchar(256)                   not null,
+    birthdate                 date                           not null,
+    date_of_create_account    date                           not null,
+    deleted_account           boolean          default false not null,
+    total_amount_of_transfers bigint           default 0,
+    nickname                  varchar(200)                   not null
         unique,
-    rating_of_user            varchar(100) default '0'::character varying,
-    role_of_user              varchar(50)  default 'USER'::character varying,
-    current_amount_on_account bigint       default 0     not null
+    rating_of_user            varchar(100)     default 'firstLevel'::character varying,
+    role_of_user              varchar(50)      default 'USER'::character varying,
+    current_amount_on_account double precision default 0     not null
 );
 
 alter table user_table
-    owner to postgres;
-
-create table rating_of_user
-(
-    id                    integer not null
-        primary key,
-    description_of_rating text    not null
-        unique
-);
-
-alter table rating_of_user
-    owner to postgres;
-
-create table l_rating_users
-(
-    id        integer not null
-        primary key,
-    user_id   bigint  not null
-        unique
-        constraint l_rating_users_user_table_id_fk
-            references user_table
-            on update cascade on delete cascade,
-    rating_id integer not null
-        constraint l_rating_users_rating_of_user_id_fk
-            references rating_of_user
-            on update cascade on delete cascade
-);
-
-alter table l_rating_users
     owner to postgres;
 
 create table transaction_table
@@ -64,7 +35,7 @@ create table transaction_table
     id                  integer default nextval('transaction_id_seq'::regclass) not null
         primary key,
     date_of_transaction date                                                    not null,
-    amount_of_transfer  integer                                                 not null,
+    amount_of_transfer  double precision                                        not null,
     receiver_id         bigint                                                  not null
         constraint transaction_user_table_id_fk
             references user_table
@@ -88,7 +59,9 @@ create table cards_table
     card_number varchar(20)                                             not null
         unique,
     expire_date date                                                    not null,
-    is_deleted  boolean default false                                   not null
+    is_deleted  boolean default false                                   not null,
+    cvv         varchar(100)                                            not null
+        unique
 );
 
 alter table cards_table
