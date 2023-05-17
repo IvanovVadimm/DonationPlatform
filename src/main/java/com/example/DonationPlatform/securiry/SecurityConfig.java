@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private CustomUserDetailService customUserDetailService;
+    private final CustomUserDetailService customUserDetailService;
     private static final String[] AUTH_WHITELIST = {
             "/v3/api-docs/**",
             "/swagger-ui/**"
@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.DELETE, "/cards").permitAll()
                 .antMatchers(HttpMethod.GET, "/cards/{id}").permitAll()
 
-                .antMatchers(HttpMethod.GET, "/actuator/{id}").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/actuator").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated()
                 .and()
