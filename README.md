@@ -80,7 +80,3 @@ Application use PostgreSQL database. For start the application you need Postgres
 * http://localhost:8080/cards - GET method: allows to get card from DataBase;
 
 * http://localhost:8080/actuator - GET method: allows get additional endpoints info,env,shutdown,mappings,beans
-
-
-## Classes and their purpose
- Dao classes
