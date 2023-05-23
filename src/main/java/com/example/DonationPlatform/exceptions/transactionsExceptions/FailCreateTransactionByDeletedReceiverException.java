@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.transactionsExceptions;
 
 public class FailCreateTransactionByDeletedReceiverException extends Exception {
-
-    private int receiverId;
+    private final int receiverId;
 
     public FailCreateTransactionByDeletedReceiverException(int receiverId) {
         this.receiverId = receiverId;

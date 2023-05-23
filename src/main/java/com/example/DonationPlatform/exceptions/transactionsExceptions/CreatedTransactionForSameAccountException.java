@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.transactionsExceptions;
 
 public class CreatedTransactionForSameAccountException extends Exception {
-
-    private int id;
+    private final int id;
 
     public CreatedTransactionForSameAccountException(int id) {
         this.id = id;
@@ -10,6 +9,6 @@ public class CreatedTransactionForSameAccountException extends Exception {
 
     @Override
     public String toString() {
-        return "User with id: "+id+" tried make transaction on same account with id: "+ id;
+        return "User with id: " + id + " tried make transaction on same account with id: " + id;
     }
 }

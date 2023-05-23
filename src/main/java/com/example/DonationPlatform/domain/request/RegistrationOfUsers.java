@@ -13,6 +13,9 @@ import java.sql.Date;
 @AllArgsConstructor
 public class RegistrationOfUsers {
 
+    public RegistrationOfUsers(){
+    }
+
     @Email
     private String email;
 
@@ -22,8 +25,8 @@ public class RegistrationOfUsers {
     @Password
     private String password;
 
-    private Date birthdate;
-
     @Size(min = 3, max = 50)
     private String nickName;
+
+    private Date birthdate;
 }

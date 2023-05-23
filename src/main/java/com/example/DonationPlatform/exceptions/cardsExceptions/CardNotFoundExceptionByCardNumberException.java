@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
 public class CardNotFoundExceptionByCardNumberException extends Exception {
-
-    private String cardNumber;
+    private final String cardNumber;
 
     public CardNotFoundExceptionByCardNumberException(String cardNumber) {
         this.cardNumber = cardNumber;

@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
 public class CardNotFoundByCardIdException extends Exception {
-
-    private int id;
+    private final int id;
 
     public CardNotFoundByCardIdException(int id) {
         this.id = id;

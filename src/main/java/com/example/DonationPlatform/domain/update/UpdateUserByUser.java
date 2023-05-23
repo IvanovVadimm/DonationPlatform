@@ -12,20 +12,19 @@ import java.sql.Date;
 @Component
 @Data
 public class UpdateUserByUser {
-
-    int id;
+    private int id;
 
     @Email
-    String email;
+    private String email;
 
     @Size(min = 3, max = 30)
-    String nickName;
+    private String nickName;
 
     @Login
-    String login;
+    private String login;
 
     @Password
-    String password;
+    private String password;
 
-    Date birthdate;
+    private Date birthdate;
 }

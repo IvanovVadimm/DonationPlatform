@@ -7,7 +7,9 @@ import javax.validation.ConstraintValidatorContext;
 import java.sql.Date;
 import java.time.LocalDate;
 
-/** Validation by expire date **/
+/**
+ * Validation by expire date
+ **/
 public class ValidExpireDateVisaCard implements ConstraintValidator<ExpireDateVisaCard, Date> {
     @Override
     public boolean isValid(Date value, ConstraintValidatorContext context) {

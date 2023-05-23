@@ -1,6 +1,5 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
-
 public class InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate extends Exception {
     @Override
     public String toString() {

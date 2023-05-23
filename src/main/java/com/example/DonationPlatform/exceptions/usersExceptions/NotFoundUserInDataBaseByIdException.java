@@ -1,7 +1,7 @@
 package com.example.DonationPlatform.exceptions.usersExceptions;
 
-public class NotFoundUserInDataBaseByIdException extends Exception{
-    private int id;
+public class NotFoundUserInDataBaseByIdException extends Exception {
+    private final int id;
 
     public NotFoundUserInDataBaseByIdException(int id) {
         this.id = id;

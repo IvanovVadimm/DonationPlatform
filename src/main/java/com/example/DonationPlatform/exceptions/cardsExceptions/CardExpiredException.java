@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
 public class CardExpiredException extends Exception {
-
-    private String cardNumber;
+    private final String cardNumber;
 
     public CardExpiredException(String cardNumber) {
         this.cardNumber = cardNumber;

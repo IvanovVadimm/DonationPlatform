@@ -12,14 +12,15 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.sql.Date;
 
-/**Class for create transaction**/
+/**
+ * Class for create transaction
+ **/
 
 @Data
 @Component
 @Entity
 @Table(name = "transaction_table")
 public class DaoTransactionWithLightInformation {
-
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transaction_id_seq_gen")

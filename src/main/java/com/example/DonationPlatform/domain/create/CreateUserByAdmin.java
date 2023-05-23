@@ -10,7 +10,6 @@ import java.sql.Date;
 
 @Data
 public class CreateUserByAdmin {
-
     @Email
     private String email;
 
@@ -24,16 +23,10 @@ public class CreateUserByAdmin {
     private String login;
 
     private Date birthdate;
-
     private Date dateOfCreateAccount;
-
     private int totalAmountOfTransfers;
-
     private int currentAmountOnAccount;
-
     private String ratingOfUsers;
-
     private boolean deleteOfAccount;
-
     private String role;
 }

@@ -5,7 +5,9 @@ import com.example.DonationPlatform.annotation.Email;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-/** Validation by email **/
+/**
+ * Validation by email
+ **/
 public class ValidEmail implements ConstraintValidator<Email, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

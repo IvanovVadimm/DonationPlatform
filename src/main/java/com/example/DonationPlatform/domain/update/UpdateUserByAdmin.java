@@ -10,24 +10,21 @@ import java.sql.Date;
 
 @Data
 public class UpdateUserByAdmin {
-
-    int id;
+    private int id;
 
     @Email
-    String email;
+    private String email;
 
     @Size(min = 3, max = 30)
-    String nickName;
+    private String nickName;
 
     @Login
-    String login;
+    private String login;
 
     @Password
-    String password;
+    private String password;
 
-    String role;
-
-    Date birthdate;
-
-    String ratingOfUsers;
+    private String role;
+    private Date birthdate;
+    private String ratingOfUsers;
 }

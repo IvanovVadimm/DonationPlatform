@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 
 public interface IdaoCardRepository extends JpaRepository<DaoCard, Integer> {
-
     @Query(nativeQuery = true, value = "SELECT * FROM cards_table ct INNER JOIN l_cards_of_users lct on ct.id = lct.card_id WHERE lct.user_id =:userId")
     ArrayList<DaoCard> findAllCardByUserId(Integer userId);
 

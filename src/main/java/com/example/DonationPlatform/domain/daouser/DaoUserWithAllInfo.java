@@ -29,7 +29,6 @@ import java.util.Set;
 @EqualsAndHashCode(exclude = {"senderItems", "receiverItems"})
 @Table(name = "user_table")
 public class DaoUserWithAllInfo {
-
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq_gen")

@@ -17,16 +17,17 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.sql.Date;
 
-/**Class for getting data of transaction by admins action**/
+/**
+ * Class for getting data of transaction by admins action
+ **/
 
 @Data
 @Component
 @Entity
-@ToString(exclude = {"sender","receiver"})
-@EqualsAndHashCode(exclude = {"sender","receiver"})
+@ToString(exclude = {"sender", "receiver"})
+@EqualsAndHashCode(exclude = {"sender", "receiver"})
 @Table(name = "transaction_table")
 public class DaoTransactionWithAllInfo {
-
     @Id
     @Column(name = "id")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "transaction_id_seq_gen")

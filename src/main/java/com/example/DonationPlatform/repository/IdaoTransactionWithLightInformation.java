@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.ArrayList;
 
 public interface IdaoTransactionWithLightInformation extends JpaRepository<DaoTransactionWithLightInformation, Integer> {
-
     ArrayList<DaoTransactionWithLightInformation> findAllBySenderId(int senderId);
 
     @Query(nativeQuery = true, value = "SELECT EXISTS(SELECT * FROM user_table WHERE id = :senderId and current_amount_on_account >= :amount)", countQuery = "SELECT * FROM user_table WHERE id = :senderId")

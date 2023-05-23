@@ -1,7 +1,7 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
 public class CardWasDeletedException extends Exception {
-    private String cardNumber;
+    private final String cardNumber;
 
     public CardWasDeletedException(String cardNumber) {
         this.cardNumber = cardNumber;

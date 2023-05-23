@@ -38,26 +38,25 @@ public class TransactionController {
 
     @Operation(summary = "This method gets transaction by id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "404", description = "Transaction not found"),
-            @ApiResponse(responseCode = "404", description = "Not found transaction by user"),
-            @ApiResponse(responseCode = "403", description = "There isn't right to get information about transaction")
+            @ApiResponse(responseCode = "200", description = "Transaction was found"),
+            @ApiResponse(responseCode = "204", description = "Transaction was not found")
     })
     @GetMapping("/{id}")
-    public ResponseEntity<DaoTransactionWithLightInformation> getTransactionById(@PathVariable int id) throws TransactionNotFoundByIdExceptions, NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
+    public ResponseEntity<DaoTransactionWithLightInformation> getTransactionById(@PathVariable int id) throws TransactionNotFoundByIdExceptions, NoRightToPerformActionsException {
         Optional<DaoTransactionWithLightInformation> transaction = transactionService.getTransactionWithLightInformationById(id);
-        if (transaction.isPresent()){
+        if (transaction.isPresent()) {
             log.info("Getting information about transaction for a user with id: " + id);
-            return new ResponseEntity<>(transaction.get(),HttpStatus.FOUND);
+            return new ResponseEntity<>(transaction.get(), HttpStatus.OK);
         } else {
             log.error("Failed to get information about transaction of user with id: " + id);
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 
     @Operation(summary = "This method creates transaction")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "409", description = "Sender doesn't have enough money for transaction"),
-            @ApiResponse(responseCode = "409", description = "Receiver of transaction was deleted"),
+            @ApiResponse(responseCode = "201", description = "Transaction have been created"),
+            @ApiResponse(responseCode = "204", description = "Transaction have not been created")
     })
     @PostMapping
     public ResponseEntity createTransaction(@RequestBody CreateTransactionByUser transaction) throws FailCreateTransactionBySenderDontHaveEnoughSumOnAccount, FailCreateTransactionByDeletedReceiverException, NotFoundUserInDataBaseByIdException, NoRightToPerformActionsException {
@@ -65,8 +64,8 @@ public class TransactionController {
             log.info("Transaction created successfully!");
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            log.info("Failed creating transaction!");
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
+            log.error("Failed creating transaction!");
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 }

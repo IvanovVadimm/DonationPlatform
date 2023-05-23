@@ -6,11 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-
 @Repository
 public interface IuserRepository extends JpaRepository<DaoUserWithAllInfo, Integer> {
-
     @Modifying
     @Query(nativeQuery = true, value = "UPDATE user_table SET deleted_account = true WHERE id = :id", countQuery = "SELECT * FROM user_table u WHERE u.id = :id")
     void deleteById(Integer id);
@@ -32,7 +29,7 @@ public interface IuserRepository extends JpaRepository<DaoUserWithAllInfo, Integ
 
     boolean existsUserByNickName(String nickName);
 
-    Optional<DaoUserWithAllInfo> findByLogin(String login);
+    DaoUserWithAllInfo findByLogin(String login);
 
     @Query(nativeQuery = true, value = "SELECT EXISTS(SELECT * FROM l_cards_of_users l inner join cards_table c on l.card_id = c.id WHERE c.card_number = :cardNumber and l.user_id = :userId)")
     boolean cardOwnershipCheck(Integer userId, String cardNumber);

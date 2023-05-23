@@ -16,7 +16,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     private final CustomUserDetailService customUserDetailService;
     private static final String[] AUTH_WHITELIST = {
             "/v3/api-docs/**",
@@ -48,14 +47,11 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.GET, "/user/allTransactionForAdmin/{id}").hasRole("ADMIN")
                 .antMatchers(HttpMethod.PUT, "/user/update").hasRole("USER")
                 .antMatchers(HttpMethod.PUT, "/user/updateByAdmin").hasRole("ADMIN")
-
                 .antMatchers(HttpMethod.GET, "/transaction/{id}").permitAll()
                 .antMatchers(HttpMethod.POST, "/transaction").permitAll()
-
                 .antMatchers(HttpMethod.POST, "/cards").permitAll()
                 .antMatchers(HttpMethod.DELETE, "/cards").permitAll()
                 .antMatchers(HttpMethod.GET, "/cards/{id}").permitAll()
-
                 .antMatchers(HttpMethod.GET, "/actuator").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated()
@@ -64,7 +60,7 @@ public class SecurityConfig {
                 .and()
                 .userDetailsService(customUserDetailService)
                 .httpBasic()
-                .and() //указываем тип секурити
+                .and()
                 .build();
     }
 

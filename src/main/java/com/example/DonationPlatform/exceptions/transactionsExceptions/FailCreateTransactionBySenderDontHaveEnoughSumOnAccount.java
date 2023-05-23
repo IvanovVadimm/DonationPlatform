@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.transactionsExceptions;
 
 public class FailCreateTransactionBySenderDontHaveEnoughSumOnAccount extends Exception {
-
-    private int senderId;
+    private final int senderId;
 
     public FailCreateTransactionBySenderDontHaveEnoughSumOnAccount(int senderId) {
         this.senderId = senderId;

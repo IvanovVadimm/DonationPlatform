@@ -5,7 +5,9 @@ import com.example.DonationPlatform.annotation.CvvForVisa;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-/** Validation by any three numbers **/
+/**
+ * Validation by any three numbers
+ **/
 public class ValidCvvForVisa implements ConstraintValidator<CvvForVisa, String> {
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

@@ -1,8 +1,7 @@
 package com.example.DonationPlatform.exceptions.cardsExceptions;
 
 public class AttemptToReplenishTheAccountWithANonExistedCardException extends Exception {
-
-    private int id;
+    private final int id;
 
     public AttemptToReplenishTheAccountWithANonExistedCardException(int id) {
         this.id = id;

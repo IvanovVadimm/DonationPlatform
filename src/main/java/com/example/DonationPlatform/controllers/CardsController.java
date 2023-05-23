@@ -9,7 +9,6 @@ import com.example.DonationPlatform.exceptions.cardsExceptions.CardNotFoundExcep
 import com.example.DonationPlatform.exceptions.cardsExceptions.InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate;
 import com.example.DonationPlatform.exceptions.cardsExceptions.NotEnteredCardNumberException;
 import com.example.DonationPlatform.exceptions.usersExceptions.NoRightToPerformActionsException;
-import com.example.DonationPlatform.exceptions.usersExceptions.NotFoundUserInDataBaseByIdException;
 import com.example.DonationPlatform.services.CardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.Optional;
+
 @RestController
 @RequestMapping("/cards")
 public class CardsController {
@@ -46,27 +46,25 @@ public class CardsController {
 
     @Operation(summary = "This method return card by entering id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "404", description = "This card is not exist"),
-            @ApiResponse(responseCode = "302", description = "This card was found"),
-            @ApiResponse(responseCode = "403", description = "No rights to get a card by id"),
+            @ApiResponse(responseCode = "200", description = "This card was found"),
+            @ApiResponse(responseCode = "204", description = "This card have not been found after request")
     })
     @GetMapping("/{id}")
-    public ResponseEntity getCardById(@Parameter (description = "Expected card id") @PathVariable int id) throws CardNotFoundByCardIdException, NoRightToPerformActionsException, NotFoundUserInDataBaseByIdException {
+    public ResponseEntity getCardById(@Parameter(description = "Expected card id") @PathVariable int id) throws CardNotFoundByCardIdException, NoRightToPerformActionsException {
         Optional<DaoCard> cardOptional = cardService.getCardById(id);
         if (cardOptional.isPresent()) {
             log.info("Getting information about card  with id: " + id);
-            return new ResponseEntity<>(cardOptional.get(), HttpStatus.FOUND);
+            return new ResponseEntity<>(cardOptional.get(), HttpStatus.OK);
         } else {
-            log.info("Failed to get information about card  with id: " + id);
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            log.error("Failed to get information about card  with id: " + id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 
     @Operation(summary = "This method will created card")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "501", description = "Entered not all data of card"),
-            @ApiResponse(responseCode = "409", description = "Errors of card validation"),
-            @ApiResponse(responseCode = "302", description = "This card is exist")
+            @ApiResponse(responseCode = "201", description = "Card was created successfully"),
+            @ApiResponse(responseCode = "204", description = "Card have not been created"),
     })
     @PostMapping
     public ResponseEntity createCard(@RequestBody @Valid DaoCard card, BindingResult bindingResult) throws InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate, CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
@@ -80,25 +78,24 @@ public class CardsController {
             log.info("Creating card is successfully!");
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            log.info("Creating card is unsuccessfully!");
-            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            log.error("Creating card is unsuccessfully!");
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 
     @Operation(summary = "This method allows to delete card")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Card was deleted"),
-            @ApiResponse(responseCode = "409", description = "Card wasn't deleted"),
-            @ApiResponse(responseCode = "204", description = "Cards number was not entered"),
-            @ApiResponse(responseCode = "403", description = "User have not right to delete card"),
-            @ApiResponse(responseCode = "404", description = "Not found card in Data base"),
+            @ApiResponse(responseCode = "204", description = "Card have not been deleted")
     })
     @DeleteMapping
     public ResponseEntity deleteCard(@RequestBody CardForUserView card) throws CardNotFoundExceptionByCardNumberException, NotEnteredCardNumberException, NoRightToPerformActionsException {
         if (cardService.deleteCardOfUserByCardNumber(card)) {
+            log.info("Deleting card is successfully!");
             return new ResponseEntity<>(HttpStatus.OK);
         } else {
-            return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            log.error("Deleting card is not successfully!");
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 }
