@@ -20,7 +20,6 @@ import java.sql.Date;
 /**
  * Class for getting data of transaction by admins action
  **/
-
 @Data
 @Component
 @Entity

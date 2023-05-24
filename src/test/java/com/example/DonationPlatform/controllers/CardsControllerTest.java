@@ -63,7 +63,7 @@ class CardsControllerTest {
 
     @Test
     void createCard() throws Exception {
-        when(cardService.createCardInDatabase(card)).thenReturn(true);
+        when(cardService.createCardInDatabase(any())).thenReturn(true);
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(SerializationFeature.WRAP_ROOT_VALUE, false);
         ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();

@@ -1,5 +1,6 @@
 package com.example.DonationPlatform.services;
 
+import com.example.DonationPlatform.domain.create.CardForEnteringByUserAndCreateInDataBase;
 import com.example.DonationPlatform.domain.create.CardForUserView;
 import com.example.DonationPlatform.domain.daocard.DaoCard;
 import com.example.DonationPlatform.domain.daouser.DaoUserWithAllInfo;
@@ -95,7 +96,7 @@ public class CardService {
         return cardRepository.existsCardByNumberOfCard(numberOfCard);
     }
 
-    public boolean createCardInDatabase(DaoCard card) throws CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
+    public boolean createCardInDatabase(CardForEnteringByUserAndCreateInDataBase card) throws CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
         String userLogin = returnLoginSecurityUser.getLoginOfSecurityUser();
         int userId = userRepository.findByLogin(userLogin).getId();
         Date cardExpiredDate = card.getExpireDate();

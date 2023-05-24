@@ -1,6 +1,5 @@
 package com.example.DonationPlatform.domain.daocard;
 
-import com.example.DonationPlatform.annotation.CvvForVisa;
 import com.example.DonationPlatform.annotation.ExpireDateVisaCard;
 import com.example.DonationPlatform.annotation.VisaCardNumber;
 import lombok.Data;
@@ -15,6 +14,9 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import java.sql.Date;
 
+/**
+ * Class for record card data in database.
+ **/
 @Data
 @Component
 @Entity
@@ -33,7 +35,6 @@ public class DaoCard {
     @Column(name = "expire_date")
     private Date expireDate;
 
-    @CvvForVisa
     @Column(name = "cvv")
     private String cvv;
 }

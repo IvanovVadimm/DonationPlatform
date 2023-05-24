@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import javax.validation.constraints.Size;
 import java.sql.Date;
 
+/**
+ * Class allows to update user data by given needing parameters for that.
+ **/
 @Component
 @Data
 public class UpdateUserByUser {

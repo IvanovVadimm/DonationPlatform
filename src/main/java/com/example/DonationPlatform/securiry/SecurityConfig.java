@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .antMatchers(HttpMethod.DELETE, "/cards").permitAll()
                 .antMatchers(HttpMethod.GET, "/cards/{id}").permitAll()
                 .antMatchers(HttpMethod.GET, "/actuator").hasRole("ADMIN")
+                .antMatchers(HttpMethod.GET, "/actuator/**").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated()
                 .and()

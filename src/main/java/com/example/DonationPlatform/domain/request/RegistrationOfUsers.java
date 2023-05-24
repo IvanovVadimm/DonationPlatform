@@ -5,16 +5,18 @@ import com.example.DonationPlatform.annotation.Login;
 import com.example.DonationPlatform.annotation.Password;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Size;
 import java.sql.Date;
 
+/**
+ * Class allows to make user registration by given needing parameters for that.
+ **/
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class RegistrationOfUsers {
-
-    public RegistrationOfUsers(){
-    }
 
     @Email
     private String email;
@@ -27,6 +29,5 @@ public class RegistrationOfUsers {
 
     @Size(min = 3, max = 50)
     private String nickName;
-
     private Date birthdate;
 }

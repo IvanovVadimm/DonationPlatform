@@ -1,5 +1,6 @@
 package com.example.DonationPlatform.controllers;
 
+import com.example.DonationPlatform.domain.create.CardForEnteringByUserAndCreateInDataBase;
 import com.example.DonationPlatform.domain.create.CardForUserView;
 import com.example.DonationPlatform.domain.daocard.DaoCard;
 import com.example.DonationPlatform.exceptions.cardsExceptions.CardAlreadyExistsInDataBaseException;
@@ -67,7 +68,7 @@ public class CardsController {
             @ApiResponse(responseCode = "204", description = "Card have not been created"),
     })
     @PostMapping
-    public ResponseEntity createCard(@RequestBody @Valid DaoCard card, BindingResult bindingResult) throws InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate, CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
+    public ResponseEntity createCard(@RequestBody @Valid CardForEnteringByUserAndCreateInDataBase card, BindingResult bindingResult) throws InvalidCreateCardOfUserExceptionByCardNumberAndExpiredDate, CardAlreadyExistsInDataBaseException, CardAlreadyExistsInDataBaseWithCvvException {
         if (bindingResult.hasErrors()) {
             for (ObjectError o : bindingResult.getAllErrors()) {
                 log.warn("BindingResult has Error: " + o);

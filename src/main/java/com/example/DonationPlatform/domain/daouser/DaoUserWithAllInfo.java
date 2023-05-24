@@ -22,6 +22,9 @@ import javax.validation.constraints.Size;
 import java.sql.Date;
 import java.util.Set;
 
+/**
+ * Class for record user data in data base and getting all information about user from database.
+ **/
 @Component
 @Data
 @Entity

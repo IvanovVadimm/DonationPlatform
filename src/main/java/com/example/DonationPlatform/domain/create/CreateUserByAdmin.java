@@ -8,6 +8,9 @@ import lombok.Data;
 import javax.validation.constraints.Size;
 import java.sql.Date;
 
+/**
+ * Class designed to create user account for admin by admin opportunity: setting special field, for example role, deleteAccount, ratingOfUsers, currentAmountOnAccount, totalAmountOnAccount.
+ **/
 @Data
 public class CreateUserByAdmin {
     @Email
@@ -21,7 +24,6 @@ public class CreateUserByAdmin {
 
     @Login
     private String login;
-
     private Date birthdate;
     private Date dateOfCreateAccount;
     private int totalAmountOfTransfers;

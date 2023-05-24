@@ -15,7 +15,6 @@ import java.sql.Date;
 /**
  * Class for create transaction
  **/
-
 @Data
 @Component
 @Entity

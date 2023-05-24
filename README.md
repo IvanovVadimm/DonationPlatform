@@ -79,4 +79,5 @@ Application use PostgreSQL database. For start the application you need Postgres
 * http://localhost:8080/cards - DELETE method: allows to delete card from DataBase;
 * http://localhost:8080/cards - GET method: allows to get card from DataBase;
 
-* http://localhost:8080/actuator - GET method: allows get additional endpoints info,env,shutdown,mappings,beans
+* http://localhost:8080/actuator - GET method: allows get additional endpoints info, env, shutdown, mappings, beans. This method for only Admin
+* http://localhost:8080/actuator/** - GET method: allows get additional endpoints info, env, shutdown, mappings, beans. This method for only Admin 

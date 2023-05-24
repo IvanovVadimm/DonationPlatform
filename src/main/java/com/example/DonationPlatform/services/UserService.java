@@ -41,6 +41,7 @@ public class UserService {
     private final IdaoTransactionWithAllInformation iDaoTransactionRepositoryWithAllInformation;
     private final PasswordEncoder passwordEncoder;
     private final ReturnLoginSecurityUser returnLoginSecurityUser;
+
     @Autowired
     public UserService(IuserRepository userRepository, IdaoCardRepository iCardRepository, CardService cardService, IdaoTransactionWithAllInformation iDaoTransactionRepositoryWithAllInformation, PasswordEncoder passwordEncoder, ReturnLoginSecurityUser returnLoginSecurityUser) {
         this.userRepository = userRepository;
@@ -202,6 +203,7 @@ public class UserService {
     public boolean userIsDeleted(int id) {
         return userRepository.isDeletedUserInDataBaseByIdUserChecked(id);
     }
+
     @Transactional
     public boolean userRegistration(RegistrationOfUsers registrationOfUsers) throws UserIsAlreadyExistInDataBaseWithLoginException, UserIsAlreadyExistInDataBaseWithEmailException, UserIsAlreadyExistInDataBaseWithNickNameException {
         String login = registrationOfUsers.getLogin();
