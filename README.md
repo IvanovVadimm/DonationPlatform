@@ -11,6 +11,7 @@ This project is a simple version of service for sending money between users. Sup
 * Hibernate
 * PostgresSQL
 * Maven
+* Docker
 
 
 ## Database

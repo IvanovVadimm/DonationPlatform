@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @ExtendWith(MockitoExtension.class)
 class CardServiceTest {
@@ -97,7 +98,7 @@ class CardServiceTest {
         when(cardRepository.existsCardByNumberOfCard(daoCard.getNumberOfCard())).thenReturn(true);
         boolean result = cardRepository.existsCardByNumberOfCard(daoCard.getNumberOfCard());
         assertTrue(result);
-        verify(cardRepository).existsCardByNumberOfCard(daoCard.getNumberOfCard());
+        verify(cardRepository, times(1)).existsCardByNumberOfCard(daoCard.getNumberOfCard());
     }
 
     @Test
@@ -106,6 +107,6 @@ class CardServiceTest {
         when(cardRepository.existsByCvv(daoCard.getCvv())).thenReturn(false);
         boolean result = cardService.createCardInDatabase(cardForEnteringByUserAndCreateInDataBase);
         assertTrue(result);
-        verify(cardRepository).existsByCvv(daoCard.getCvv());
+        verify(cardRepository, times(1)).existsByCvv(daoCard.getCvv());
     }
 }
