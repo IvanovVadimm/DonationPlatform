@@ -1,5 +1,6 @@
-Contacts:
+# Contacts:
 https://www.linkedin.com/in/ivanov-vadim-sergeevich/
+
 https://t.me/VVadimIvanov
 # Donation Platform application
 
