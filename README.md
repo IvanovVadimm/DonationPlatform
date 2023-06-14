@@ -1,3 +1,6 @@
+Contacts:
+https://www.linkedin.com/in/ivanov-vadim-sergeevich/
+https://t.me/VVadimIvanov
 # Donation Platform application
 
 This project is a simple version of service for sending money between users. Supported extension is only .jpg.
